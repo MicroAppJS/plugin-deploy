@@ -2,6 +2,8 @@
 
 module.exports = function DeployCommand(api, opts = {}) {
 
+    api.assertVersion('>=0.1.5');
+
     const path = require('path');
     const chalk = require('chalk');
     const tryRequire = require('try-require');
@@ -9,18 +11,8 @@ module.exports = function DeployCommand(api, opts = {}) {
     // commands
     require('./commands/version')(api);
 
-    api.registerMethod('beforeCommandDeploy', {
-        type: api.API_TYPE.EVENT,
-        description: '发布前事件',
-    });
-    api.registerMethod('afterCommandDeploy', {
-        type: api.API_TYPE.EVENT,
-        description: '发布后事件',
-    });
-    api.registerMethod('modifyCommandDeployMessage', {
-        type: api.API_TYPE.MODIFY,
-        description: '发布消息二次编辑事件',
-    });
+    // methods
+    require('./methods')(api, opts);
 
     // start
     api.registerCommand('deploy', {
@@ -29,7 +21,7 @@ module.exports = function DeployCommand(api, opts = {}) {
         options: {
             '-': 'deploy last commit',
             '--hooks': 'git commit hooks.',
-            '-c <config>': '指定配置文件路径, 相对于根路径. (默认为根目录下的: "micro-app.deploy.config.js")',
+            '--config <config>': '指定配置文件路径, 相对于根路径. 默认为根目录下的: "micro-app.deploy.config.js"',
         },
         details: `
 Examples:
@@ -38,18 +30,18 @@ Examples:
     ${chalk.gray('# git hooks')}
     micro-app deploy --hooks
     ${chalk.gray('# config file')}
-    micro-app deploy -c micro-app.deploy.config.js
+    micro-app deploy --config micro-app.deploy.config.js
 
 Config:
     {
-        git: '',
+        git: '', ${chalk.gray('// git 地址')}
         ${chalk.gray('branch: \'\',')}
-        branch: {
+        branch: {  ${chalk.gray('// git branch')}
             name: '',
             extends: true,
         },
-        message: '',
-        user: {
+        message: '', ${chalk.gray('// git commit message')}
+        user: { ${chalk.gray('// git user info')}
             name: '',
             email: '',
         },
@@ -58,17 +50,16 @@ Config:
     }, args => {
         const logger = api.logger;
 
-        const isHooks = args.hooks;
         const configFile = args.c || 'micro-app.deploy.config.js';
         const deployConfig = tryRequire(path.resolve(api.root, configFile));
 
         if (!deployConfig || typeof deployConfig !== 'object') {
-            logger.logo(`${chalk.yellow('need "micro-app.deploy.config.js"')}`);
+            logger.warn('Not Found "micro-app.deploy.config.js"');
             return;
         }
 
         const deployCommit = require('./deployCommit');
-        return deployCommit(api, isHooks, Object.assign({}, deployConfig, opts));
+        return deployCommit(api, args, Object.assign({}, deployConfig, opts));
     });
 
 
