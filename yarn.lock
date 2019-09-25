@@ -379,21 +379,20 @@
     "@types/istanbul-reports" "^1.1.1"
     "@types/yargs" "^13.0.0"
 
-"@micro-app/cli@0.1.3":
-  version "0.1.3"
-  resolved "https://registry.yarnpkg.com/@micro-app/cli/-/cli-0.1.3.tgz#09ad6dc6bd8f4acc016097a23ba6915f68f6370b"
-  integrity sha512-9GGybX02MwQyFDlRY99xEHy8NljFNdHGjyLAR/EeR+ZdwIwJpHFYRtDBNB4Luetc73QlcrhI4TsbhRl6DhNVkw==
+"@micro-app/cli@0.1.5":
+  version "0.1.5"
+  resolved "https://registry.yarnpkg.com/@micro-app/cli/-/cli-0.1.5.tgz#da12f622f5565d1fec14a7d415e4d677d9274c40"
+  integrity sha512-bchtukKC2HpGsXR8Z6soNcAQ7yydHYpeBZe7d8Adf6F9XZJ0VoUssF/8ewgkneS2JU06kAnNXCn0zfnn+YKEWg==
   dependencies:
     koa "^2.8.1"
-    opn "^5.5.0"
     shelljs "^0.8.3"
     update-notifier "^3.0.1"
     yargs-parser "^13.1.1"
 
-"@micro-app/core@0.1.3":
-  version "0.1.3"
-  resolved "https://registry.yarnpkg.com/@micro-app/core/-/core-0.1.3.tgz#0918ad6957751b95f13009ea45f4f1e702adba3c"
-  integrity sha512-Mt8xrZS3wUHO/PV5OlwwynFatP2vX8DZYy6tT9eIseib/y1ypSpx1Zo8Eb6UPJS3r7U2+HmekFNlQXT2Io4bjA==
+"@micro-app/core@0.1.5":
+  version "0.1.5"
+  resolved "https://registry.yarnpkg.com/@micro-app/core/-/core-0.1.5.tgz#60dc28209e45396dc6f4ddc1c14115d1bc76f3db"
+  integrity sha512-ptR00TmZcJPGmRVWrKJAe2b07G1wnWlcJGC9rwYIW6mz2OpWkjD0lkc4Pkjs68gAK09V8ifGFFkohTawWjRQEg==
   dependencies:
     ajv "^6.10.2"
     ajv-keywords "^3.4.1"
@@ -405,6 +404,7 @@
     module-alias "^2.2.1"
     ora "^3.4.0"
     semver "^6.3.0"
+    semver-regex "^3.1.0"
     stream-to-string "^1.2.0"
     try-require "^1.2.1"
     webpack-merge "^4.2.2"
@@ -3861,13 +3861,6 @@ only@~0.0.2:
   resolved "https://registry.yarnpkg.com/only/-/only-0.0.2.tgz#2afde84d03e50b9a8edc444e30610a70295edfb4"
   integrity sha1-Kv3oTQPlC5qO3EROMGEKcCle37Q=
 
-opn@^5.5.0:
-  version "5.5.0"
-  resolved "https://registry.yarnpkg.com/opn/-/opn-5.5.0.tgz#fc7164fab56d235904c51c3b27da6758ca3b9bfc"
-  integrity sha512-PqHpggC9bLV0VeWcdKhkpxY+3JTzetLSqTCWL/z/tFIbI6G8JCjondXklT1JinczLz2Xib62sSp0T/gKT4KksA==
-  dependencies:
-    is-wsl "^1.1.0"
-
 optimist@^0.6.1:
   version "0.6.1"
   resolved "https://registry.yarnpkg.com/optimist/-/optimist-0.6.1.tgz#da3ea74686fa21a19a111c326e90eb15a0196686"
@@ -4527,6 +4520,11 @@ semver-diff@^2.0.0:
   integrity sha1-S7uEN8jTfksM8aaP1ybsbWRdbTY=
   dependencies:
     semver "^5.0.3"
+
+semver-regex@^3.1.0:
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/semver-regex/-/semver-regex-3.1.0.tgz#23368cb577bf2668e78bf9c3e8e519fc029ca069"
+  integrity sha512-xJqZonbAohJmpogzq1Mx7DB4DT3LO+sG5J4i/rcRyZ527dcUqsTVb5T0vM5gwOBf3KO0v7i94EpbdvwSukJyAQ==
 
 "semver@2 || 3 || 4 || 5", semver@^5.0.3, semver@^5.3.0, semver@^5.4.1, semver@^5.5.0, semver@^5.5.1, semver@^5.6.0:
   version "5.7.1"
