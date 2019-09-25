@@ -73,20 +73,16 @@ module.exports = function deployCommit(api, args, deployConfig) {
         fs.mkdirSync(deployDir);
 
         if (fs.statSync(deployDir).isDirectory()) {
-            return runDeploy(api, args, deployConfig, { deployDir, gitPath, gitBranch, commitHash, gitUser, currBranch, gitMessage }).then(() => {
-                if (fs.existsSync(deployDir)) {
-                    shelljs.rm('-rf', deployDir);
-                }
-
-                api.applyPluginHooks('afterCommandDeploy', { args, config: deployConfig });
-            }).catch(() => {
-                if (fs.existsSync(deployDir)) {
-                    shelljs.rm('-rf', deployDir);
-                }
+            const bSuccessful = runDeploy(api, args, deployConfig, { deployDir, gitPath, gitBranch, commitHash, gitUser, currBranch, gitMessage });
+            if (!bSuccessful) {
                 logger.error('Fail! Check your config, please');
+            }
+            if (fs.existsSync(deployDir)) {
+                shelljs.rm('-rf', deployDir);
+            }
 
-                api.applyPluginHooks('afterCommandDeploy', { args, config: deployConfig });
-            });
+            api.applyPluginHooks('afterCommandDeploy', { args, config: deployConfig });
+            return;
         }
     }
 
@@ -123,7 +119,7 @@ function runDeploy(api, args, deployConfig, { deployDir, gitPath, gitBranch, com
             if (gitp === ngitp) {
                 // not change
                 logger.warn('NOT MODIFIED!');
-                return Promise.resolve();
+                return true;
             }
             if (ngitp) {
                 if (dependencies[MICRO_APP_CONFIG_NAME]) {
@@ -153,29 +149,25 @@ function runDeploy(api, args, deployConfig, { deployDir, gitPath, gitBranch, com
 
                 if (!message) {
                     logger.error('modifyCommandDeployMessage() must be retrun { message } !!!');
-                    return Promise.reject();
+                    return false;
                 }
 
-                return new Promise((resolve, reject) => {
-                    const spinner = logger.spinner('Auto Deploy...');
-                    spinner.start();
-                    shelljs.exec(`git commit -a -m "${message}"`, { cwd: deployDir }, function(code, stdout, stderr) {
-                        if (code === 0) {
-                            shelljs.exec('git push', { cwd: deployDir }, function(code, stdout, stderr) {
-                                if (code === 0) {
-                                    spinner.succeed(chalk.green('Success !'));
-                                    return resolve();
-                                }
-                                spinner.fail(chalk.red('Fail !') + stderr);
-                                return reject(stderr);
-                            });
-                        }
-                        spinner.fail(chalk.red('Fail !') + stderr);
-                        return reject(stderr);
-                    });
-                });
+                const spinner = logger.spinner('Auto Deploy...');
+                spinner.start();
+                const { code, stderr } = shelljs.exec(`git commit -a -m "${message}"`, { cwd: deployDir });
+                if (code === 0) {
+                    const { code, stderr } = shelljs.exec('git push', { cwd: deployDir });
+                    if (code === 0) {
+                        spinner.succeed(chalk.green('Success !'));
+                        return true;
+                    }
+                    spinner.fail(chalk.red('Fail !') + stderr);
+                } else {
+                    spinner.fail(chalk.red('Fail !') + stderr);
+                }
+                return false;
             }
         }
     }
-    return Promise.resolve();
+    return true;
 }
