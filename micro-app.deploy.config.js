@@ -1,6 +1,7 @@
 'use strict';
 
 module.exports = {
+    disabled: false,
     git: '',
     branch: {
         name: '',

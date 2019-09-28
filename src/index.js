@@ -34,6 +34,7 @@ Examples:
 
 Config:
     {
+        disabled: false, ${chalk.gray('// 是否禁用该功能')}
         git: '', ${chalk.gray('// git 地址')}
         ${chalk.gray('branch: \'\',')}
         branch: {  ${chalk.gray('// git branch')}
@@ -54,12 +55,18 @@ Config:
         const deployConfig = tryRequire(path.resolve(api.root, configFile));
 
         if (!deployConfig || typeof deployConfig !== 'object') {
-            logger.warn('Not Found "micro-app.deploy.config.js"');
+            logger.warn('没有找到 "micro-app.deploy.config.js" 文件, 将使用默认配置.');
+        }
+
+        const config = Object.assign({}, opts, deployConfig || {});
+
+        if (config && (config.disabled || config.disable)) {
+            logger.info('已禁用命令行 Deploy...');
             return;
         }
 
         const deployCommit = require('./deployCommit');
-        return deployCommit(api, args, Object.assign({}, deployConfig, opts));
+        return deployCommit(api, args, config);
     });
 
 
