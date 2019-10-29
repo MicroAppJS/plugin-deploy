@@ -1,6 +1,6 @@
 {
     "name": "@micro-app/plugin-deploy-command",
-    "version": "0.0.6",
+    "version": "0.1.0",
     "description": "[Plugin] auto deploy command plugin.",
     "main": "src/index.js",
     "scripts": {
@@ -30,11 +30,11 @@
     },
     "license": "MIT",
     "peerDependencies": {
-        "@micro-app/core": ">=0.1.5"
+        "@micro-app/core": ">=0.2.2"
     },
     "devDependencies": {
-        "@micro-app/cli": "0.1.5",
-        "@micro-app/core": "0.1.5",
+        "@micro-app/cli": "0.2.0",
+        "@micro-app/core": "0.2.2",
         "@types/jest": "^24.0.18",
         "babel-eslint": "^10.0.3",
         "coveralls": "^3.0.6",

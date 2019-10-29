@@ -12,7 +12,7 @@ describe('Command version', () => {
 
         service.registerPlugin({
             id: 'test:VersionCommand',
-            link: path.join(__dirname, './version.js'),
+            link: path.join(__dirname, './index.js'),
         });
 
         const plugin = service.plugins.find(item => item.id === 'cli:plugins-commands-version');
