@@ -7,10 +7,11 @@ module.exports = {
         name: 'gh-pages',
         // extends: true,
     },
-    message: '',
+    message: 'AUTO TEST',
     user: {
         name: '',
         email: '',
     },
     dist: 'test/gitinfo',
+    // cname: 'www.2o3t.cn',
 };
