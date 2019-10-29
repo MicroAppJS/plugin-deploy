@@ -1,4 +1,4 @@
-# Micro APP Plugin - Deploy-Command
+# Micro APP Plugin - Deploy Command
 
 [Plugin] auto deploy command plugin.
 
