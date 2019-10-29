@@ -2,7 +2,7 @@
 
 module.exports = function versionCommand(api) {
 
-    const pkg = require('../../package.json');
+    const pkg = require('../../../package.json');
 
     api.addCommandVersion(pkg);
 

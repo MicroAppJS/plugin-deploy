@@ -72,5 +72,7 @@ module.exports = {
         name: '',
         email: '',
     },
+    dist: '', // 可选原数据
+    cname: '', // 可选
 }
 ```
