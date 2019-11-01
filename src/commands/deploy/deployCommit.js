@@ -7,7 +7,7 @@ const CONSTANTS = require('../../constants');
 
 function execJS(execStr, options = {}) {
     return new Promise((resolve, reject) => {
-        shelljs.exec(execStr, Object.assign({ silent: true, async: true }, options), function(code, stdout, stderr) {
+        shelljs.exec(execStr, Object.assign({ silent: true, async: true, stdio: 'inherit' }, options), function(code, stdout, stderr) {
             if (code && stderr) {
                 reject(new Error(stderr));
             } else {
