@@ -2,7 +2,7 @@
 
 module.exports = {
     disabled: false,
-    git: 'git@github.com:MicrosApp/MicroApp-Plugin-Deploy-Command.git',
+    git: 'git@github.com:MicroAppJS/MicroApp-Plugin-Deploy-Command.git',
     branch: {
         name: 'gh-pages',
         // extends: true,

@@ -9,13 +9,13 @@
     "files": [
         "src"
     ],
-    "homepage": "https://github.com/MicrosApp/MicroApp-Plugin-Deploy-Command",
+    "homepage": "https://github.com/MicroAppJS/MicroApp-Plugin-Deploy-Command",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/MicrosApp/MicroApp-Plugin-Deploy-Command.git"
+        "url": "git+https://github.com/MicroAppJS/MicroApp-Plugin-Deploy-Command.git"
     },
     "bugs": {
-        "url": "https://github.com/MicrosApp/MicroApp-Plugin-Deploy-Command/issues"
+        "url": "https://github.com/MicroAppJS/MicroApp-Plugin-Deploy-Command/issues"
     },
     "keywords": [
         "micro",
