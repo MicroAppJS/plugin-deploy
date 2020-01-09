@@ -2,7 +2,7 @@
 
 const shelljs = require('shelljs');
 const path = require('path');
-const { fs, _, chalk, tryRequire } = require('@micro-app/shared-utils');
+const { fs, _, chalk } = require('@micro-app/shared-utils');
 const CONSTANTS = require('../../constants');
 
 function execJS(execStr, options = {}) {
@@ -54,40 +54,6 @@ function createCNAMEFile({ deployConfig, deployDir }) {
     }
 }
 
-function modifyFile(api, { args, deployConfig, deployDir, gitURL, gitBranch, commitHash, gitUser, gitMessage }) {
-    const logger = api.logger;
-    const microAppConfig = api.self;
-
-    const pkgPath = path.resolve(deployDir, 'package.json');
-    const pkg = tryRequire(pkgPath) || {};
-    const { dependencies = {}, devDependencies = {} } = pkg;
-    const deps = Object.assign({}, dependencies, devDependencies);
-
-    const MICRO_APP_CONFIG_NAME = microAppConfig.packageName;
-    if (deps[MICRO_APP_CONFIG_NAME]) {
-        const gitp = deps[MICRO_APP_CONFIG_NAME];
-        // update
-        const ngitp = gitp.replace(/#[-_\d\w]+$/igm, `#${commitHash}`);
-
-        if (gitp === ngitp) { // not change
-            return false;
-        }
-        if (ngitp) {
-            if (dependencies[MICRO_APP_CONFIG_NAME]) {
-                dependencies[MICRO_APP_CONFIG_NAME] = ngitp;
-            }
-            if (devDependencies[MICRO_APP_CONFIG_NAME]) {
-                devDependencies[MICRO_APP_CONFIG_NAME] = ngitp;
-            }
-            fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 4), 'utf8');
-
-            return true;
-        }
-    }
-
-    return false;
-}
-
 async function clone(api, { deployDir, gitURL, gitBranch }) {
     const execStr = `git clone "${gitURL}" -b ${gitBranch} "${deployDir}"`;
     return await execJS(execStr);
@@ -115,7 +81,7 @@ async function push(api, { args, deployConfig, deployDir, gitURL, gitBranch, com
         throw new Error('modifyCommandDeployMessage() must be retrun { message } !!!');
     }
 
-    if (process.env.NODE_ENV === 'MICRO_APP_TEST') {
+    if (process.env.MICRO_APP_TEST) {
         api.logger.debug('MICRO_APP_TEST --> Exit!!!');
         return;
     }
@@ -126,9 +92,7 @@ async function push(api, { args, deployConfig, deployDir, gitURL, gitBranch, com
 }
 
 async function setup(deployDir) {
-    if (!fs.existsSync(deployDir)) {
-        fs.mkdirpSync(deployDir);
-    }
+    await fs.ensureDir(deployDir);
     await fs.emptyDir(deployDir);
 
     const execStr = 'git init';
@@ -152,10 +116,11 @@ async function runDeploy(api, { args, deployConfig, deployDir, gitURL, gitBranch
         await setup(deployDir);
         const hasDist = deployConfig.dist;
         let bModify = false;
-        if (!hasDist) { // 需要 clone
+        if (!hasDist) { // 需要 clone, 且自动修改 package.json
             spinner.text = 'Cloning...';
             await clone(api, { args, deployConfig, deployDir, gitURL, gitBranch, commitHash, gitUser });
             spinner.text = 'Modify files...';
+            const modifyFile = require('./modifyFile');
             bModify = modifyFile(api, { args, deployConfig, deployDir, gitURL, gitBranch, commitHash, gitUser, gitMessage });
         } else { // copy dist to deployDir
             const opts = {};
@@ -233,10 +198,11 @@ module.exports = async function deployCommit(api, args, deployConfigs) {
             if (!bSuccessful) {
                 logger.error(`Fail [${index}]! Check your config, please!`);
             }
-            // 清空
-            if (fs.existsSync(deployDir)) {
-                fs.removeSync(deployDir);
-            }
+        }
+
+        // 清空
+        if (fs.existsSync(deployDir)) {
+            fs.removeSync(deployDir);
         }
 
         return params;

@@ -46,7 +46,10 @@ function parseConfig(deployConfig, api, args) {
     const userEmail = args.email || args.userEmail || _.get(deployConfig, 'user.email') || '';
 
     const cname = deployConfig.cname || false;
-    const dist = args.dist || deployConfig.dist || false;
+
+    // dest，dist 相同
+    const dest = args.dest || deployConfig.dest || false;
+    const dist = dest || args.dist || deployConfig.dist || false;
 
     const _otherConfig = {
         type, disabled,

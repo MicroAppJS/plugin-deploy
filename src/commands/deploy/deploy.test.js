@@ -2,7 +2,7 @@
 
 /* global expect */
 
-process.env.NODE_ENV = 'MICRO_APP_TEST';
+process.env.MICRO_APP_TEST = 'true';
 
 const path = require('path');
 

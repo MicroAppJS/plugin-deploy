@@ -9,6 +9,7 @@ module.exports = function(api, opts = {}) {
         usage: 'micro-app deploy [options]',
         options: {
             '-': 'deploy last commit',
+            '--type': '部署方式类型. (default: github)',
             '--message': 'git commit message.',
             '--name': 'git commit user name.',
             '--email': 'git commit user email.',
@@ -42,7 +43,7 @@ Config:
         cname: '', ${chalk.gray('// 如果是发布到自定义域名, default: false')}
     }
           `.trim(),
-    }, async args => {
+    }, args => {
         const _ = require('lodash');
         const logger = api.logger;
 
@@ -50,22 +51,41 @@ Config:
         const deployConfig = parseConfig(api, args, opts);
 
         if (_.isEmpty(deployConfig)) {
-            logger.error('无法加载到 Deploy 配置信息...');
+            logger.error('[Deploy]', '无法加载到 Deploy 配置信息...');
             return;
         }
 
         if (deployConfig && deployConfig.disabled) {
-            logger.info('已禁用命令行 Deploy...');
+            logger.info('[Deploy]', '已禁用命令行 Deploy...');
             return;
         }
 
-        api.applyPluginHooks('beforeCommandDeploy', { args, config: deployConfig });
+        // default: github
+        args.type = args.type || 'git';
 
-        const deployCommit = require('./deployCommit');
-        const result = await deployCommit(api, args, deployConfig);
+        let chain = Promise.resolve();
 
-        api.applyPluginHooks('afterCommandDeploy', { args, config: deployConfig });
-        return result;
+        chain = chain.then(() => api.applyPluginHooks('beforeCommandDeploy', { args, config: deployConfig }));
+
+        const type = args.type;
+        switch (type) {
+            case 'git':
+            case 'github':
+            {
+                const gitCMD = require('../git');
+                chain = chain.then(() => gitCMD(api, args, deployConfig));
+                break;
+            }
+            default:
+                chain = chain.then(() => {
+                    logger.warn('[Deploy]', `Not Found type: ${type}!`);
+                });
+                break;
+        }
+
+        chain = chain.then(() => api.applyPluginHooks('afterCommandDeploy', { args, config: deployConfig }));
+
+        return chain;
     });
 
 };
