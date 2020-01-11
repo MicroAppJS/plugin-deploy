@@ -1,7 +1,7 @@
 'use strict';
 
 const path = require('path');
-const { fs, _, chalk, execa, Env } = require('@micro-app/shared-utils');
+const { fs, _, chalk, Env } = require('@micro-app/shared-utils');
 const CONSTANTS = require('../../constants');
 const { execGit, execGitSync, getCurrBranch, getGitBranch, getGitUser } = require('./utils');
 

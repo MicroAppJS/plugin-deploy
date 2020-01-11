@@ -1,6 +1,6 @@
 'use strict';
 
-const { _, execa } = require('@micro-app/shared-utils');
+const { logger, execa } = require('@micro-app/shared-utils');
 
 const TIMEOUT = 1000 * 60 * 3;
 
@@ -24,8 +24,13 @@ function execGit(args, options = {}) {
 }
 
 function execGitSync(args, options = {}) {
-    const { stdout, exitCode } = execa.sync('git', args, Object.assign({ stdio: 'ignore', timeout: TIMEOUT }, options));
-    return exitCode === 0 ? (stdout || '').trim() : '';
+    try {
+        const { stdout, exitCode } = execa.sync('git', args, Object.assign({ stdio: 'ignore', timeout: TIMEOUT }, options));
+        return exitCode === 0 ? (stdout || '').trim() : '';
+    } catch (error) {
+        logger.warn('execGitSync', error);
+        return '';
+    }
 }
 
 function getCurrBranch() {
@@ -49,11 +54,11 @@ function getGitBranch(deployConfig) {
 
 function getGitUser(deployConfig) {
     let userName = deployConfig.userName;
-    if (_.isEmpty(userName)) {
+    if (!userName) {
         userName = execGitSync([ 'config', 'user.name' ]);
     }
     let userEmail = deployConfig.userEmail;
-    if (_.isEmpty(userEmail)) {
+    if (!userEmail) {
         userEmail = execGitSync([ 'config', 'user.email' ]);
     }
     return {
