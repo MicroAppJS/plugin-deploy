@@ -39,7 +39,7 @@ Config:
             name: '',
             email: '',
         },
-        dist: '', ${chalk.gray('// git dist')}
+        dest: '', ${chalk.gray('// git dest')}
         cname: '', ${chalk.gray('// 如果是发布到自定义域名, default: false')}
     }
           `.trim(),

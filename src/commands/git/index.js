@@ -4,47 +4,7 @@ const shelljs = require('shelljs');
 const path = require('path');
 const { fs, _, chalk } = require('@micro-app/shared-utils');
 const CONSTANTS = require('../../constants');
-
-function execJS(execStr, options = {}) {
-    return new Promise((resolve, reject) => {
-        shelljs.exec(execStr, Object.assign({ silent: true, async: true, stdio: 'inherit' }, options), function(code, stdout, stderr) {
-            if (code && stderr) {
-                reject(new Error(stderr));
-            } else {
-                resolve(stdout);
-            }
-        });
-    });
-}
-
-function getGitBranch(deployConfig) {
-    let gitBranch = deployConfig.branch || 'master';
-    const currBranch = ((shelljs.exec('git rev-parse --abbrev-ref HEAD', { silent: true }) || {}).stdout || '').trim();
-    // 继承当前分支
-    if (currBranch && deployConfig.extends === true) {
-        gitBranch = currBranch;
-    } else if (deployConfig.branch) {
-        gitBranch = deployConfig.branch;
-    } else {
-        gitBranch = 'master';
-    }
-    return gitBranch;
-}
-
-function getGitUser(deployConfig) {
-    let userName = deployConfig.userName;
-    if (_.isEmpty(userName)) {
-        userName = ((shelljs.exec('git config user.name', { silent: true }) || {}).stdout || '').trim();
-    }
-    let userEmail = deployConfig.userEmail;
-    if (_.isEmpty(userEmail)) {
-        userEmail = ((shelljs.exec('git config user.email', { silent: true }) || {}).stdout || '').trim();
-    }
-    return {
-        name: userName || '',
-        email: userEmail || '',
-    };
-}
+const { execJS, getCurrBranch, getGitBranch, getGitUser } = require('./utils');
 
 function createCNAMEFile({ deployConfig, deployDir }) {
     const cname = deployConfig.cname;
@@ -54,12 +14,12 @@ function createCNAMEFile({ deployConfig, deployDir }) {
     }
 }
 
-async function clone(api, { deployDir, gitURL, gitBranch }) {
-    const execStr = `git clone "${gitURL}" -b ${gitBranch} "${deployDir}"`;
-    return await execJS(execStr);
-}
+async function setup(api, { deployDir, gitUser }) {
+    await fs.ensureDir(deployDir);
+    await fs.emptyDir(deployDir);
 
-async function push(api, { args, deployConfig, deployDir, gitURL, gitBranch, commitHash, gitUser, gitMessage, name }) {
+    await execJS('git init', { cwd: deployDir });
+
     // git config
     if (gitUser.name && typeof gitUser.name === 'string') {
         await execJS(`git config user.name ${gitUser.name}`, { cwd: deployDir });
@@ -67,10 +27,19 @@ async function push(api, { args, deployConfig, deployDir, gitURL, gitBranch, com
     if (gitUser.email && typeof gitUser.email === 'string') {
         await execJS(`git config user.email ${gitUser.email}`, { cwd: deployDir });
     }
+}
+
+async function clone(api, { deployDir, gitURL, gitBranch }) {
+    const execStr = `git clone "${gitURL}" -b ${gitBranch} "${deployDir}"`;
+    return await execJS(execStr);
+}
+
+async function gitPush(api, { args, deployConfig, deployDir, gitURL, gitBranch, commitHash, gitUser, gitMessage, name }) {
+    const currBranch = getCurrBranch();
     // commit + push
     const { message } = api.applyPluginHooks('modifyCommandDeployMessage', {
         args, config: deployConfig,
-        message: `:rocket: auto deploy from ${name} [${gitBranch}] - ${commitHash.substr(0, 8)}${gitMessage}`,
+        message: `:rocket: auto deploy from ${name} [${currBranch || gitBranch}] - ${commitHash.substr(0, 8)}${gitMessage}`,
         branch: gitBranch,
         gitMessage,
         commitHash,
@@ -86,17 +55,36 @@ async function push(api, { args, deployConfig, deployDir, gitURL, gitBranch, com
         return;
     }
 
-    await execJS('git add -A', { cwd: deployDir });
-    await execJS(`git commit -a -m "${message}"`, { cwd: deployDir });
-    await execJS(`git push -u "${gitURL}" HEAD:${gitBranch} --force`, { cwd: deployDir });
+    try {
+        await execJS('git add -A', { cwd: deployDir });
+        await execJS(`git commit -a -m "${message}"`, { cwd: deployDir });
+        await execJS(`git push -u "${gitURL}" HEAD:${gitBranch} --force`, { cwd: deployDir });
+    } catch (error) {
+        throw error;
+    }
+
+    return true;
 }
 
-async function setup(deployDir) {
-    await fs.ensureDir(deployDir);
-    await fs.emptyDir(deployDir);
+function getCommitHash(api, { isHooks, gitBranch }) {
+    let commitHash = '';
+    if (isHooks) {
+        commitHash = ((shelljs.exec('git rev-parse --verify HEAD', { silent: true }) || {}).stdout || '').trim();
+    } else {
+        commitHash = ((shelljs.exec(`git rev-parse origin/${gitBranch}`, { silent: true }) || {}).stdout || '').trim();
+    }
+    return commitHash;
+}
 
-    const execStr = 'git init';
-    return await execJS(execStr, { cwd: deployDir });
+function getGitMessage(api, { deployConfig, commitHash }) {
+    let gitMessage = deployConfig.message && ` | ${deployConfig.message}` || '';
+    if (!gitMessage) {
+        const msg = ((shelljs.exec(`git log --pretty=format:“%s” ${commitHash} -1`, { silent: true }) || {}).stdout || '').trim();
+        if (msg) {
+            gitMessage = ` | ${msg}`;
+        }
+    }
+    return gitMessage;
 }
 
 async function runDeploy(api, { args, deployConfig, deployDir, gitURL, gitBranch, commitHash, gitUser, gitMessage }) {
@@ -113,7 +101,8 @@ async function runDeploy(api, { args, deployConfig, deployDir, gitURL, gitBranch
     const spinner = logger.spinner('Auto Deploy...');
     spinner.start();
     try {
-        await setup(deployDir);
+        await setup(api, { deployDir, gitUser });
+
         const hasDist = deployConfig.dist;
         let bModify = false;
         if (!hasDist) { // 需要 clone, 且自动修改 package.json
@@ -134,7 +123,7 @@ async function runDeploy(api, { args, deployConfig, deployDir, gitURL, gitBranch
 
         if (bModify) {
             spinner.text = 'Push files...';
-            await push(api, { args, deployConfig, deployDir, gitURL, gitBranch, commitHash, gitUser, gitMessage, name: MICRO_APP_CONFIG_NAME });
+            await gitPush(api, { args, deployConfig, deployDir, gitURL, gitBranch, commitHash, gitUser, gitMessage, name: MICRO_APP_CONFIG_NAME });
             spinner.succeed(chalk.green('Success!'));
         } else {
             spinner.succeed(chalk.yellow('NOT MODIFIED!'));
@@ -166,24 +155,13 @@ module.exports = async function deployCommit(api, args, deployConfigs) {
         }
         const gitUser = getGitUser(deployConfig);
 
-        let commitHash = '';
-        if (isHooks) {
-            commitHash = ((shelljs.exec('git rev-parse --verify HEAD', { silent: true }) || {}).stdout || '').trim();
-        } else {
-            commitHash = ((shelljs.exec(`git rev-parse origin/${gitBranch}`, { silent: true }) || {}).stdout || '').trim();
-        }
+        const commitHash = getCommitHash(api, { isHooks, gitBranch });
         if (_.isEmpty(commitHash)) {
             logger.warn('Not Found commit Hash!');
             return;
         }
 
-        let gitMessage = deployConfig.message && ` | ${deployConfig.message}` || '';
-        if (!gitMessage) {
-            const msg = ((shelljs.exec(`git log --pretty=format:“%s” ${commitHash} -1`, { silent: true }) || {}).stdout || '').trim();
-            if (msg) {
-                gitMessage = ` | ${msg}`;
-            }
-        }
+        const gitMessage = getGitMessage(api, { deployConfig, commitHash });
 
         const gitRoot = path.resolve(root, CONSTANTS.GIT_NAME);
         if (!fs.existsSync(gitRoot)) {
@@ -192,17 +170,16 @@ module.exports = async function deployCommit(api, args, deployConfigs) {
         const deployDir = path.resolve(gitRoot, CONSTANTS.GIT_SCOPE_NAME);
 
         const params = { args, deployConfig, deployDir, gitURL, gitBranch, commitHash, gitUser, gitMessage };
-
-        if (fs.statSync(gitRoot).isDirectory()) {
-            const bSuccessful = await runDeploy(api, params);
-            if (!bSuccessful) {
-                logger.error(`Fail [${index}]! Check your config, please!`);
-            }
-        }
+        const bSuccessful = await runDeploy(api, params);
 
         // 清空
         if (fs.existsSync(deployDir)) {
             fs.removeSync(deployDir);
+        }
+
+        if (!bSuccessful) {
+            logger.error(`Fail [${index}]! Check your config, please!`);
+            process.exitCode = 1;
         }
 
         return params;

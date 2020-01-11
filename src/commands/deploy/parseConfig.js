@@ -42,10 +42,10 @@ function parseConfig(deployConfig, api, args) {
     const disabled = deployConfig.disabled || deployConfig.disable || false;
     const message = args.m || args.msg || args.message || deployConfig.message || '';
 
-    const userName = args.name || args.userName || _.get(deployConfig, 'user.name') || '';
+    const userName = args.name || args.userName || _.get(deployConfig, 'user.name') || process.env.GITHUB_ACTOR || '';
     const userEmail = args.email || args.userEmail || _.get(deployConfig, 'user.email') || '';
 
-    const cname = deployConfig.cname || false;
+    const cname = deployConfig.cname || deployConfig.CNAME || false;
 
     // dest，dist 相同
     const dest = args.dest || deployConfig.dest || false;

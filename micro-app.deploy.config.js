@@ -12,6 +12,6 @@ module.exports = {
         name: '',
         email: '',
     },
-    dist: 'test/gitinfo',
+    dest: 'test/gitinfo',
     // cname: 'www.2o3t.cn',
 };
