@@ -99,7 +99,7 @@ async function runDeploy(api, { args, deployConfig, deployDir, gitURL, gitBranch
     try {
         await setup(api, { deployDir, gitUser });
 
-        const hasDist = deployConfig.dist;
+        const hasDist = deployConfig.dest;
         let bModify = false;
         if (!hasDist) { // 需要 clone, 且自动修改 package.json
             spinner.text = 'Cloning...';
@@ -107,9 +107,9 @@ async function runDeploy(api, { args, deployConfig, deployDir, gitURL, gitBranch
             spinner.text = 'Modify files...';
             const modifyFile = require('./modifyFile');
             bModify = modifyFile(api, { args, deployConfig, deployDir, gitURL, gitBranch, commitHash, gitUser, gitMessage });
-        } else { // copy dist to deployDir
+        } else { // copy dest to deployDir
             const opts = {};
-            spinner.text = 'Copying files from dist folder...';
+            spinner.text = 'Copying files from dest folder...';
             await fs.copy(hasDist, deployDir, opts);
             bModify = true;
         }

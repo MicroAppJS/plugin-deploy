@@ -57,7 +57,7 @@ function parseConfig(deployConfig, api, args) {
         userName,
         userEmail,
         cname,
-        dist,
+        dest: dist,
     };
 
     const data = parseRepo(repository);
