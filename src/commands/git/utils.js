@@ -1,29 +1,29 @@
 'use strict';
 
-const shelljs = require('shelljs');
-const { _ } = require('@micro-app/shared-utils');
+const { _, execa } = require('@micro-app/shared-utils');
+
+const TIMEOUT = 1000 * 60 * 3;
 
 module.exports = {
-    execJS,
+    execGit,
     getCurrBranch,
     getGitBranch,
     getGitUser,
 };
 
-function execJS(execStr, options = {}) {
+function execGit(args, options = {}) {
     return new Promise((resolve, reject) => {
-        shelljs.exec(execStr, Object.assign({ silent: true, async: true, stdio: 'inherit' }, options), function(code, stdout, stderr) {
-            if (code && stderr) {
-                reject(new Error(stderr));
-            } else {
-                resolve(stdout);
-            }
+        // 'pipe' | 'ignore' | 'inherit'
+        execa('git', args, Object.assign({ stdio: 'ignore', timeout: TIMEOUT }, options)).then(({ stdout }) => {
+            resolve(stdout);
+        }).catch(e => {
+            reject(e);
         });
     });
 }
 
 function getCurrBranch() {
-    const currBranch = ((shelljs.exec('git rev-parse --abbrev-ref HEAD', { silent: true }) || {}).stdout || '').trim();
+    const currBranch = ((execa.commandSync('git rev-parse --abbrev-ref HEAD', { silent: true }) || {}).stdout || '').trim();
     return currBranch;
 }
 
@@ -44,11 +44,11 @@ function getGitBranch(deployConfig) {
 function getGitUser(deployConfig) {
     let userName = deployConfig.userName;
     if (_.isEmpty(userName)) {
-        userName = ((shelljs.exec('git config user.name', { silent: true }) || {}).stdout || '').trim();
+        userName = ((execa.commandSync('git config user.name', { silent: true }) || {}).stdout || '').trim();
     }
     let userEmail = deployConfig.userEmail;
     if (_.isEmpty(userEmail)) {
-        userEmail = ((shelljs.exec('git config user.email', { silent: true }) || {}).stdout || '').trim();
+        userEmail = ((execa.commandSync('git config user.email', { silent: true }) || {}).stdout || '').trim();
     }
     return {
         name: userName || 'Git Deploy Anonymous',

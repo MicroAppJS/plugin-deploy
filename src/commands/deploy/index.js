@@ -79,6 +79,7 @@ Config:
             default:
                 chain = chain.then(() => {
                     logger.warn('[Deploy]', `Not Found type: ${type}!`);
+                    // TODO others type
                 });
                 break;
         }

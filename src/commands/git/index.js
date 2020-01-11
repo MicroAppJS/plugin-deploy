@@ -1,10 +1,9 @@
 'use strict';
 
-const shelljs = require('shelljs');
 const path = require('path');
-const { fs, _, chalk } = require('@micro-app/shared-utils');
+const { fs, _, chalk, execa, Env } = require('@micro-app/shared-utils');
 const CONSTANTS = require('../../constants');
-const { execJS, getCurrBranch, getGitBranch, getGitUser } = require('./utils');
+const { execGit, getCurrBranch, getGitBranch, getGitUser } = require('./utils');
 
 function createCNAMEFile({ deployConfig, deployDir }) {
     const cname = deployConfig.cname;
@@ -18,23 +17,22 @@ async function setup(api, { deployDir, gitUser }) {
     await fs.ensureDir(deployDir);
     await fs.emptyDir(deployDir);
 
-    await execJS('git init', { cwd: deployDir });
+    await execGit([ 'init' ], { cwd: deployDir });
 
     // git config
     if (gitUser.name && typeof gitUser.name === 'string') {
-        await execJS(`git config user.name ${gitUser.name}`, { cwd: deployDir });
+        await execGit([ 'config', 'user.name', gitUser.name ], { cwd: deployDir });
     }
     if (gitUser.email && typeof gitUser.email === 'string') {
-        await execJS(`git config user.email ${gitUser.email}`, { cwd: deployDir });
+        await execGit([ 'config', 'user.email', gitUser.email ], { cwd: deployDir });
     }
 }
 
 async function clone(api, { deployDir, gitURL, gitBranch }) {
-    const execStr = `git clone "${gitURL}" -b ${gitBranch} "${deployDir}"`;
-    return await execJS(execStr);
+    return await execGit([ 'clone', gitURL, '-b', gitBranch, deployDir ], { cwd: deployDir });
 }
 
-async function gitPush(api, { args, deployConfig, deployDir, gitURL, gitBranch, commitHash, gitUser, gitMessage, name }) {
+function gitPush(api, { args, deployConfig, deployDir, gitURL, gitBranch, commitHash, gitUser, gitMessage, name }) {
     const currBranch = getCurrBranch();
     // commit + push
     const { message } = api.applyPluginHooks('modifyCommandDeployMessage', {
@@ -50,28 +48,26 @@ async function gitPush(api, { args, deployConfig, deployDir, gitURL, gitBranch, 
         throw new Error('modifyCommandDeployMessage() must be retrun { message } !!!');
     }
 
+    let chain = Promise.resolve();
+
     if (process.env.MICRO_APP_TEST) {
         api.logger.debug('MICRO_APP_TEST --> Exit!!!');
-        return;
+        return chain;
     }
 
-    try {
-        await execJS('git add -A', { cwd: deployDir });
-        await execJS(`git commit -a -m "${message}"`, { cwd: deployDir });
-        await execJS(`git push -u "${gitURL}" HEAD:${gitBranch} --force`, { cwd: deployDir });
-    } catch (error) {
-        throw error;
-    }
+    chain = chain.then(() => execGit([ 'add', '-A' ], { cwd: deployDir }));
+    chain = chain.then(() => execGit([ 'commit', '-a', '-m', message ], { cwd: deployDir }));
+    chain = chain.then(() => execGit([ 'push', '-u', gitURL, `HEAD:${gitBranch}`, '--force' ], { cwd: deployDir }));
 
-    return true;
+    return chain;
 }
 
 function getCommitHash(api, { isHooks, gitBranch }) {
     let commitHash = '';
     if (isHooks) {
-        commitHash = ((shelljs.exec('git rev-parse --verify HEAD', { silent: true }) || {}).stdout || '').trim();
+        commitHash = ((execa.commandSync('git rev-parse --verify HEAD', { silent: true }) || {}).stdout || '').trim();
     } else {
-        commitHash = ((shelljs.exec(`git rev-parse origin/${gitBranch}`, { silent: true }) || {}).stdout || '').trim();
+        commitHash = ((execa.commandSync(`git rev-parse origin/${gitBranch}`, { silent: true }) || {}).stdout || '').trim();
     }
     return commitHash;
 }
@@ -79,7 +75,7 @@ function getCommitHash(api, { isHooks, gitBranch }) {
 function getGitMessage(api, { deployConfig, commitHash }) {
     let gitMessage = deployConfig.message && ` | ${deployConfig.message}` || '';
     if (!gitMessage) {
-        const msg = ((shelljs.exec(`git log --pretty=format:“%s” ${commitHash} -1`, { silent: true }) || {}).stdout || '').trim();
+        const msg = ((execa.commandSync(`git log --pretty=format:“%s” ${commitHash} -1`, { silent: true }) || {}).stdout || '').trim();
         if (msg) {
             gitMessage = ` | ${msg}`;
         }
@@ -139,6 +135,10 @@ module.exports = async function deployCommit(api, args, deployConfigs) {
     const logger = api.logger;
     const root = api.root;
 
+    if (!Env.hasGit()) {
+        logger.throw('Sorry, this script requires git');
+    }
+
     const isHooks = args.hooks;
 
     return Promise.all(deployConfigs.map(async (deployConfig, index) => {
@@ -178,8 +178,8 @@ module.exports = async function deployCommit(api, args, deployConfigs) {
         }
 
         if (!bSuccessful) {
-            logger.error(`Fail [${index}]! Check your config, please!`);
-            process.exitCode = 1;
+            logger.error(`Fail${index && ` [${index}]`}! Check your config, please!`);
+            process.exit(1);
         }
 
         return params;
