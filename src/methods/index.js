@@ -15,4 +15,5 @@ module.exports = function registerMethods(api, opts = {}) {
         description: '发布消息二次编辑事件',
     });
 
+    // TODO others type
 };

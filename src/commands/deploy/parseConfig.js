@@ -42,11 +42,14 @@ function parseConfig(deployConfig, api, args) {
     const disabled = deployConfig.disabled || deployConfig.disable || false;
     const message = args.m || args.msg || args.message || deployConfig.message || '';
 
-    const userName = args.name || args.userName || _.get(deployConfig, 'user.name') || '';
+    const userName = args.name || args.userName || _.get(deployConfig, 'user.name') || process.env.GITHUB_ACTOR || '';
     const userEmail = args.email || args.userEmail || _.get(deployConfig, 'user.email') || '';
 
-    const cname = deployConfig.cname || false;
-    const dist = args.dist || deployConfig.dist || false;
+    const cname = deployConfig.cname || deployConfig.CNAME || false;
+
+    // dest，dist 相同
+    const dest = args.dest || deployConfig.dest || false;
+    const dist = dest || args.dist || deployConfig.dist || false;
 
     const _otherConfig = {
         type, disabled,
@@ -83,17 +86,20 @@ module.exports = function(api, args, opts) {
     if (_.isEmpty(deployConfig) || !_.isPlainObject(deployConfig)) {
         api.logger.warn('没有找到可用的配置文件信息, 将使用默认配置.');
     }
-    deployConfig = Object.assign({}, opts, deployConfig || {});
-    if (_.isEmpty(deployConfig)) return null;
 
     // parse config
     if (Array.isArray(deployConfig)) {
         const result = deployConfig.map(item => {
+            const _config = Object.assign({}, opts, item || {});
+            if (_.isEmpty(_config)) return null;
             return parseConfig(item, api, args);
-        });
+        }).filter(item => !!item);
+        if (_.isEmpty(result)) return null;
         return result;
     }
 
-    const data = parseConfig(deployConfig, api, args);
+    const _config = Object.assign({}, opts, deployConfig || {});
+    if (_.isEmpty(_config)) return null;
+    const data = parseConfig(_config, api, args);
     return [ data ];
 };

@@ -2,7 +2,7 @@
 
 module.exports = {
     disabled: false,
-    git: 'git@github.com:MicrosApp/MicroApp-Plugin-Deploy-Command.git',
+    git: 'git@github.com:MicroAppJS/MicroApp-Plugin-Deploy-Command.git', // repository,repo
     branch: {
         name: 'gh-pages',
         // extends: true,
@@ -12,6 +12,6 @@ module.exports = {
         name: '',
         email: '',
     },
-    dist: 'test/gitinfo',
+    dest: 'test/gitinfo',
     // cname: 'www.2o3t.cn',
 };

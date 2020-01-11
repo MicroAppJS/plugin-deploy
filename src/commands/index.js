@@ -1,7 +1,6 @@
 'use strict';
 
 const commands = [
-    'version',
     'deploy',
 ];
 
