@@ -28,7 +28,7 @@ function execGitSync(args, options = {}) {
         const { stdout, exitCode } = execa.sync('git', args, Object.assign({ stdio: 'ignore', timeout: TIMEOUT }, options));
         return exitCode === 0 ? (stdout || '').trim() : '';
     } catch (error) {
-        logger.warn('execGitSync', error);
+        logger.warn('[execGitSync]', error.message);
         return '';
     }
 }
