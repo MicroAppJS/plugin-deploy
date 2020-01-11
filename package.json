@@ -1,7 +1,7 @@
 {
-    "name": "@micro-app/plugin-deploy-command",
-    "version": "0.1.5",
-    "description": "[Plugin] auto deploy command plugin.",
+    "name": "@micro-app/plugin-deploy",
+    "version": "0.0.1",
+    "description": "[Plugin] auto deploy plugin.",
     "main": "src/index.js",
     "scripts": {
         "prepublishOnly": "npm run test",
@@ -10,13 +10,13 @@
     "files": [
         "src"
     ],
-    "homepage": "https://github.com/MicroAppJS/MicroApp-Plugin-Deploy-Command",
+    "homepage": "https://github.com/MicroAppJS/plugin-deploy",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/MicroAppJS/MicroApp-Plugin-Deploy-Command.git"
+        "url": "git+https://github.com/MicroAppJS/plugin-deploy.git"
     },
     "bugs": {
-        "url": "https://github.com/MicroAppJS/MicroApp-Plugin-Deploy-Command/issues"
+        "url": "https://github.com/MicroAppJS/plugin-deploy/issues"
     },
     "keywords": [
         "micro",
@@ -40,5 +40,8 @@
         "eslint": "^5.16.0",
         "eslint-config-2o3t": "^1.1.17",
         "jest": "^24.9.0"
+    },
+    "dependencies": {
+        "@micro-app/shared-utils": "^0.1.11"
     }
 }

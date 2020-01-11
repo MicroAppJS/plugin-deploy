@@ -6,6 +6,7 @@ const TIMEOUT = 1000 * 60 * 3;
 
 module.exports = {
     execGit,
+    execGitSync,
     getCurrBranch,
     getGitBranch,
     getGitUser,
@@ -22,8 +23,13 @@ function execGit(args, options = {}) {
     });
 }
 
+function execGitSync(args, options = {}) {
+    const { stdout, exitCode } = execa.sync('git', args, Object.assign({ stdio: 'ignore', timeout: TIMEOUT }, options));
+    return exitCode === 0 ? (stdout || '').trim() : '';
+}
+
 function getCurrBranch() {
-    const currBranch = ((execa.commandSync('git rev-parse --abbrev-ref HEAD', { silent: true }) || {}).stdout || '').trim();
+    const currBranch = execGitSync([ 'rev-parse', '--abbrev-ref', 'HEAD' ]);
     return currBranch;
 }
 
@@ -44,11 +50,11 @@ function getGitBranch(deployConfig) {
 function getGitUser(deployConfig) {
     let userName = deployConfig.userName;
     if (_.isEmpty(userName)) {
-        userName = ((execa.commandSync('git config user.name', { silent: true }) || {}).stdout || '').trim();
+        userName = execGitSync([ 'config', 'user.name' ]);
     }
     let userEmail = deployConfig.userEmail;
     if (_.isEmpty(userEmail)) {
-        userEmail = ((execa.commandSync('git config user.email', { silent: true }) || {}).stdout || '').trim();
+        userEmail = execGitSync([ 'config', 'user.email' ]);
     }
     return {
         name: userName || 'Git Deploy Anonymous',
