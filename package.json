@@ -34,10 +34,9 @@
         "@micro-app/cli": ">=0.3.0"
     },
     "devDependencies": {
-        "@micro-app/cli": "^0.3.0-alpha.2",
-        "@types/jest": "^24.0.18",
+        "@micro-app/cli": "^0.3.0-alpha.3",
+        "@types/jest": "^24.0.25",
         "babel-eslint": "^10.0.3",
-        "coveralls": "^3.0.6",
         "eslint": "^5.16.0",
         "eslint-config-2o3t": "^1.1.17",
         "jest": "^24.9.0"
