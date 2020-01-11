@@ -1,9 +1,9 @@
 'use strict';
 
 const path = require('path');
-const { fs, _, chalk, execa, Env } = require('@micro-app/shared-utils');
+const { fs, _, chalk, Env } = require('@micro-app/shared-utils');
 const CONSTANTS = require('../../constants');
-const { execGit, getCurrBranch, getGitBranch, getGitUser } = require('./utils');
+const { execGit, execGitSync, getCurrBranch, getGitBranch, getGitUser } = require('./utils');
 
 function createCNAMEFile({ deployConfig, deployDir }) {
     const cname = deployConfig.cname;
@@ -65,9 +65,9 @@ function gitPush(api, { args, deployConfig, deployDir, gitURL, gitBranch, commit
 function getCommitHash(api, { isHooks, gitBranch }) {
     let commitHash = '';
     if (isHooks) {
-        commitHash = ((execa.commandSync('git rev-parse --verify HEAD', { silent: true }) || {}).stdout || '').trim();
+        commitHash = execGitSync([ 'rev-parse', '--verify', 'HEAD' ]);
     } else {
-        commitHash = ((execa.commandSync(`git rev-parse origin/${gitBranch}`, { silent: true }) || {}).stdout || '').trim();
+        commitHash = execGitSync([ 'rev-parse', `origin/${gitBranch}` ]);
     }
     return commitHash;
 }
@@ -75,7 +75,7 @@ function getCommitHash(api, { isHooks, gitBranch }) {
 function getGitMessage(api, { deployConfig, commitHash }) {
     let gitMessage = deployConfig.message && ` | ${deployConfig.message}` || '';
     if (!gitMessage) {
-        const msg = ((execa.commandSync(`git log --pretty=format:“%s” ${commitHash} -1`, { silent: true }) || {}).stdout || '').trim();
+        const msg = execGitSync([ 'log', '--pretty=format:“%s”', commitHash, '-1' ]);
         if (msg) {
             gitMessage = ` | ${msg}`;
         }
