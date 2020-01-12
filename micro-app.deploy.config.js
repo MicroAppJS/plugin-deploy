@@ -9,8 +9,8 @@ module.exports = {
     },
     message: 'AUTO TEST',
     user: {
-        name: '',
-        email: '',
+        name: 'Zyao89',
+        email: 'zyao89@gmail.com',
     },
     dest: 'test/gitinfo',
     // cname: 'www.2o3t.cn',

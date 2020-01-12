@@ -35,13 +35,11 @@
     },
     "devDependencies": {
         "@micro-app/cli": "^0.3.0-alpha.3",
+        "@micro-app/shared-utils": "^0.1.13",
         "@types/jest": "^24.0.25",
         "babel-eslint": "^10.0.3",
         "eslint": "^5.16.0",
         "eslint-config-2o3t": "^1.1.17",
         "jest": "^24.9.0"
-    },
-    "dependencies": {
-        "@micro-app/shared-utils": "^0.1.11"
     }
 }

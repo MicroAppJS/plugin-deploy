@@ -1,6 +1,6 @@
 'use strict';
 
-const { logger, execa } = require('@micro-app/shared-utils');
+const { logger, execa, shell } = require('@micro-app/shared-utils');
 
 const TIMEOUT = 1000 * 60 * 3;
 
@@ -24,13 +24,11 @@ function execGit(args, options = {}) {
 }
 
 function execGitSync(args, options = {}) {
-    try {
-        const { stdout, exitCode } = execa.sync('git', args, Object.assign({ stdio: 'ignore', timeout: TIMEOUT }, options));
-        return exitCode === 0 ? (stdout || '').trim() : '';
-    } catch (error) {
-        logger.warn('[execGitSync]', error.message);
-        return '';
-    }
+    const cmd = [ 'git' ].concat(args).join(' ');
+    const { stdout, code, stderr } = shell.exec(cmd, Object.assign({ stdio: 'ignore', timeout: TIMEOUT, silent: true }, options));
+    if (code === 0) { return (stdout || '').trim(); }
+    logger.warn('[execGitSync]', stderr || stdout);
+    return '';
 }
 
 function getCurrBranch() {

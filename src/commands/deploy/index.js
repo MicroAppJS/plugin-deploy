@@ -2,14 +2,14 @@
 
 module.exports = function(api, opts = {}) {
 
-    const chalk = require('chalk');
+    const { chalk } = require('@micro-app/shared-utils');
 
     api.registerCommand('deploy', {
         description: 'sync commit status.',
         usage: 'micro-app deploy [options]',
         options: {
             '-': 'deploy last commit',
-            '--type': '部署方式类型. (default: github)',
+            '--type': '部署方式类型. (default: git)',
             '--message': 'git commit message.',
             '--name': 'git commit user name.',
             '--email': 'git commit user email.',
@@ -60,7 +60,14 @@ Config:
             return;
         }
 
-        // default: github
+        const deployCmds = [
+            {
+                type: 'git',
+                run: require('../git'),
+            },
+        ].concat(api.applyPluginHooks('addCommandDeployType', []) || []);
+
+        // default: git
         args.type = args.type || 'git';
 
         let chain = Promise.resolve();
@@ -68,22 +75,15 @@ Config:
         chain = chain.then(() => api.applyPluginHooks('beforeCommandDeploy', { args, config: deployConfig }));
 
         const type = args.type;
-        switch (type) {
-            case 'git':
-            case 'github':
-            {
-                const gitCMD = require('../git');
-                chain = chain.then(() => gitCMD(api, args, deployConfig));
-                break;
-            }
-            default:
-                chain = chain.then(() => {
-                    logger.warn('[Deploy]', `Not Found type: ${type}!`);
-                    // TODO others type
-                });
-                break;
+        const allCmds = deployCmds.filter(item => item.type === type);
+        if (allCmds.length > 0) {
+            allCmds.forEach(item => {
+                const run = item.run;
+                chain = chain.then(() => run(api, args, deployConfig));
+            });
+        } else {
+            chain = chain.then(() => logger.warn('[Deploy]', `Not Found type: ${type}!`));
         }
-
         chain = chain.then(() => api.applyPluginHooks('afterCommandDeploy', { args, config: deployConfig }));
 
         return chain;
