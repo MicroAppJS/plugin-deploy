@@ -32,8 +32,7 @@ async function clone(api, { deployDir, gitURL, gitBranch }) {
     return await execGit([ 'clone', gitURL, '-b', gitBranch, deployDir ], { cwd: deployDir });
 }
 
-function gitPush(api, { args, deployConfig, deployDir, gitURL, gitBranch, commitHash, gitUser, gitMessage, name }) {
-    const currBranch = getCurrBranch();
+function gitPush(api, { args, deployConfig, deployDir, gitURL, gitBranch, commitHash, gitUser, gitMessage, name, currBranch }) {
     // commit + push
     const { message } = api.applyPluginHooks('modifyCommandDeployMessage', {
         args, config: deployConfig,
@@ -62,12 +61,12 @@ function gitPush(api, { args, deployConfig, deployDir, gitURL, gitBranch, commit
     return chain;
 }
 
-function getCommitHash(api, { isHooks, gitBranch }) {
+function getCommitHash(api, { currBranch, isHooks }) {
     let commitHash = '';
     if (isHooks) {
         commitHash = execGitSync([ 'rev-parse', '--verify', 'HEAD' ]);
     } else {
-        commitHash = execGitSync([ 'rev-parse', `origin/${gitBranch}` ]);
+        commitHash = execGitSync([ 'rev-parse', `origin/${currBranch}` ]);
     }
     return commitHash;
 }
@@ -83,7 +82,7 @@ function getGitMessage(api, { deployConfig, commitHash }) {
     return gitMessage;
 }
 
-async function runDeploy(api, { args, deployConfig, deployDir, gitURL, gitBranch, commitHash, gitUser, gitMessage }) {
+async function runDeploy(api, { args, deployConfig, deployDir, gitURL, gitBranch, commitHash, gitUser, gitMessage, currBranch }) {
     const logger = api.logger;
     const microAppConfig = api.self;
     const MICRO_APP_CONFIG_NAME = microAppConfig.packageName;
@@ -119,7 +118,7 @@ async function runDeploy(api, { args, deployConfig, deployDir, gitURL, gitBranch
 
         if (bModify) {
             spinner.text = 'Push files...';
-            await gitPush(api, { args, deployConfig, deployDir, gitURL, gitBranch, commitHash, gitUser, gitMessage, name: MICRO_APP_CONFIG_NAME });
+            await gitPush(api, { args, deployConfig, deployDir, gitURL, gitBranch, commitHash, gitUser, gitMessage, name: MICRO_APP_CONFIG_NAME, currBranch });
             spinner.succeed(chalk.green('Success!'));
         } else {
             spinner.succeed(chalk.yellow('NOT MODIFIED!'));
@@ -155,7 +154,9 @@ module.exports = async function deployCommit(api, args, deployConfigs) {
         }
         const gitUser = getGitUser(deployConfig);
 
-        const commitHash = getCommitHash(api, { isHooks, gitBranch });
+        const currBranch = getCurrBranch(deployConfig);
+
+        const commitHash = getCommitHash(api, { currBranch, isHooks });
         if (_.isEmpty(commitHash)) {
             logger.warn('Not Found commit Hash!');
             return;
@@ -169,7 +170,7 @@ module.exports = async function deployCommit(api, args, deployConfigs) {
         }
         const deployDir = path.resolve(gitRoot, CONSTANTS.GIT_SCOPE_NAME);
 
-        const params = { args, deployConfig, deployDir, gitURL, gitBranch, commitHash, gitUser, gitMessage };
+        const params = { args, deployConfig, deployDir, gitURL, gitBranch, commitHash, gitUser, gitMessage, currBranch };
         const bSuccessful = await runDeploy(api, params);
 
         // 清空

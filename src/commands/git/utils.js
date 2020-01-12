@@ -31,7 +31,10 @@ function execGitSync(args, options = {}) {
     return '';
 }
 
-function getCurrBranch() {
+function getCurrBranch(deployConfig) {
+    if (deployConfig && deployConfig.baseBranch) {
+        return deployConfig.baseBranch;
+    }
     const currBranch = execGitSync([ 'rev-parse', '--abbrev-ref', 'HEAD' ]);
     return currBranch;
 }
