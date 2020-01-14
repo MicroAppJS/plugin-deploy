@@ -2,7 +2,7 @@
 
 module.exports = function DeployCommand(api, opts = {}) {
 
-    api.assertVersion('>=0.2.2');
+    api.assertVersion('>=0.3.0');
 
     // methods
     require('./methods')(api, opts);
@@ -13,5 +13,5 @@ module.exports = function DeployCommand(api, opts = {}) {
 };
 
 module.exports.configuration = {
-    description: '强制发布更新当前提交信息到指定 git 中命令行',
+    description: '自动发布更新命令行',
 };

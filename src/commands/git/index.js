@@ -3,7 +3,7 @@
 const path = require('path');
 const { fs, _, chalk, Env } = require('@micro-app/shared-utils');
 const CONSTANTS = require('../../constants');
-const { execGit, execGitSync, getCurrBranch, getGitBranch, getGitUser } = require('./utils');
+const { execGit, execGitSync, getCurrBranch, getGitBranch, getGitUser, getCommitHash } = require('./utils');
 
 function createCNAMEFile({ deployConfig, deployDir }) {
     const cname = deployConfig.cname;
@@ -59,16 +59,6 @@ function gitPush(api, { args, deployConfig, deployDir, gitURL, gitBranch, commit
     chain = chain.then(() => execGit([ 'push', '-u', gitURL, `HEAD:${gitBranch}`, '--force' ], { cwd: deployDir }));
 
     return chain;
-}
-
-function getCommitHash(api, { currBranch, isHooks }) {
-    let commitHash = '';
-    if (isHooks) {
-        commitHash = execGitSync([ 'rev-parse', '--verify', 'HEAD' ]);
-    } else {
-        commitHash = execGitSync([ 'rev-parse', `origin/${currBranch}` ]);
-    }
-    return commitHash;
 }
 
 function getGitMessage(api, { deployConfig, commitHash }) {
@@ -138,8 +128,7 @@ module.exports = async function deployCommit(api, args, deployConfigs) {
         logger.throw('Sorry, this script requires git');
     }
 
-    const isHooks = args.hooks;
-
+    // TODO 迁移到外部，且不中断
     return Promise.all(deployConfigs.map(async (deployConfig, index) => {
 
         const gitURL = deployConfig.url || '';
@@ -156,7 +145,7 @@ module.exports = async function deployCommit(api, args, deployConfigs) {
 
         const currBranch = getCurrBranch(deployConfig);
 
-        const commitHash = getCommitHash(api, { currBranch, isHooks });
+        const commitHash = getCommitHash();
         if (_.isEmpty(commitHash)) {
             logger.warn('Not Found commit Hash!');
             return;

@@ -7,6 +7,7 @@ const TIMEOUT = 1000 * 60 * 3;
 module.exports = {
     execGit,
     execGitSync,
+    getCommitHash,
     getCurrBranch,
     getGitBranch,
     getGitUser,
@@ -27,8 +28,13 @@ function execGitSync(args, options = {}) {
     const cmd = [ 'git' ].concat(args).join(' ');
     const { stdout, code, stderr } = shell.exec(cmd, Object.assign({ stdio: 'ignore', timeout: TIMEOUT, silent: true }, options));
     if (code === 0) { return (stdout || '').trim(); }
-    logger.warn('[execGitSync]', stderr || stdout);
+    logger.warn('[execGitSync]', cmd, stderr || stdout);
     return '';
+}
+
+function getCommitHash() {
+    const commitHash = execGitSync([ 'rev-parse', '--verify', 'HEAD' ]);
+    return commitHash;
 }
 
 function getCurrBranch(deployConfig) {

@@ -13,15 +13,12 @@ module.exports = function(api, opts = {}) {
             '--message': 'git commit message.',
             '--name': 'git commit user name.',
             '--email': 'git commit user email.',
-            '--hooks': 'git commit hooks.',
             '--config <config>': '指定配置文件路径, 相对于根路径. 默认为根目录下的: "micro-app.deploy.config.js"',
         },
         details: `
 Examples:
     ${chalk.gray('# deploy')}
     micro-app deploy
-    ${chalk.gray('# git hooks')}
-    micro-app deploy --hooks
     ${chalk.gray('# config file')}
     micro-app deploy --config micro-app.deploy.config.js
 
