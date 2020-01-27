@@ -2,14 +2,20 @@
 
 const path = require('path');
 const { fs, _, chalk, Env } = require('@micro-app/shared-utils');
-const CONSTANTS = require('../../constants');
+const CONSTANTS = require('../constants');
 const { execGit, execGitSync, getCurrBranch, getGitBranch, getGitUser, getCommitHash } = require('./utils');
 
 function createCNAMEFile({ deployConfig, deployDir }) {
     const cname = deployConfig.cname;
-    if (!_.isEmpty(cname) && _.isString(cname)) {
+    if (!_.isEmpty(cname)) {
+        const cnames = [];
+        if (_.isString(cname)) {
+            cnames.push(cname);
+        } else if (_.isArray(cname)) {
+            cnames.push(...cname);
+        }
         const filepath = path.resolve(deployDir, 'CNAME');
-        fs.writeFileSync(filepath, cname, 'utf8');
+        fs.writeFileSync(filepath, cnames.join('\n'), 'utf8');
     }
 }
 
@@ -128,7 +134,7 @@ module.exports = async function deployCommit(api, args, deployConfigs) {
         logger.throw('Sorry, this script requires git');
     }
 
-    // TODO 迁移到外部，且不中断
+    // TODO 迁移到外部，且不中断（分成不同组类型，批量部署）
     return Promise.all(deployConfigs.map(async (deployConfig, index) => {
 
         const gitURL = deployConfig.url || '';

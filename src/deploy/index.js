@@ -2,7 +2,10 @@
 
 module.exports = function(api, opts = {}) {
 
-    const { chalk } = require('@micro-app/shared-utils');
+    const registerMethods = require('./methods');
+    registerMethods(api);
+
+    const { _, chalk } = require('@micro-app/shared-utils');
 
     api.registerCommand('deploy', {
         description: 'sync commit status.',
@@ -39,9 +42,8 @@ Config:
         dest: '', ${chalk.gray('// git dest')}
         cname: '', ${chalk.gray('// 如果是发布到自定义域名, default: false')}
     }
-          `.trim(),
+        `.trim(),
     }, args => {
-        const _ = require('lodash');
         const logger = api.logger;
 
         const parseConfig = require('./parseConfig');
@@ -60,7 +62,7 @@ Config:
         const deployCmds = [
             {
                 type: 'git',
-                run: require('../git'),
+                run: require('./git'),
             },
         ].concat(api.applyPluginHooks('addCommandDeployType', []) || []);
 
@@ -83,7 +85,9 @@ Config:
         }
         chain = chain.then(() => api.applyPluginHooks('afterCommandDeploy', { args, config: deployConfig }));
 
-        return chain;
+        return chain.catch(e => {
+            logger.throw('[Deploy]', e);
+        });
     });
 
 };

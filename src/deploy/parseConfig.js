@@ -3,7 +3,7 @@
 const _ = require('lodash');
 const path = require('path');
 const tryRequire = require('try-require');
-const CONSTANTS = require('../../constants');
+const CONSTANTS = require('./constants');
 
 const rRepoURL = /^(?:(?:git|https?|git\+https|git\+ssh):\/\/)?(?:[^@]+@)?([^\/]+?)[\/:](.+?)\.git$/;
 const rGithubPage = /\.github\.(io|com)$/;

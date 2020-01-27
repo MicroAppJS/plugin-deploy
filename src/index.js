@@ -4,11 +4,11 @@ module.exports = function DeployCommand(api, opts = {}) {
 
     api.assertVersion('>=0.3.0');
 
-    // methods
-    require('./methods')(api, opts);
+    // deploy
+    require('./deploy')(api, opts);
 
-    // commands
-    require('./commands')(api, opts);
+    // release
+    require('./release')(api, opts);
 
 };
 

@@ -1,11 +1,12 @@
 {
     "name": "@micro-app/plugin-deploy",
-    "version": "0.0.3",
+    "version": "0.0.3-alpha.1",
     "description": "[Plugin] auto deploy plugin.",
     "main": "src/index.js",
     "scripts": {
         "prepublishOnly": "npm run test",
-        "test": "jest"
+        "test": "jest",
+        "publish:next": "npm publish --tag next"
     },
     "files": [
         "src"
@@ -41,5 +42,8 @@
         "eslint": "^5.16.0",
         "eslint-config-2o3t": "^1.1.17",
         "jest": "^24.9.0"
+    },
+    "dependencies": {
+        "release-it": "^12.4.3"
     }
 }
