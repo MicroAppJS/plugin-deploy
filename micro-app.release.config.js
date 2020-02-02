@@ -1,5 +1,6 @@
 'use strict';
 
+// demo config
 module.exports = {
     hooks: {
         'before:init': [
@@ -7,17 +8,20 @@ module.exports = {
         ],
     },
     git: {
-        commitMessage: 'release: v${version}',
-        tagName: 'v${version}',
+        commitMessage: 'chore: release %s',
+        tagName: 'v%s',
+    },
+    npm: {
+        publish: true,
     },
     github: {
         release: true,
         releaseName: '%s Released!',
     },
-    // plugins: {
-    //     '@release-it/conventional-changelog': {
-    //         preset: 'angular',
-    //         infile: 'CHANGELOG.md',
-    //     },
-    // },
+    plugins: {
+        '@release-it/conventional-changelog': {
+            preset: 'angular',
+            infile: 'CHANGELOG.md',
+        },
+    },
 };
