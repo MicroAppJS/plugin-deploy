@@ -7,8 +7,8 @@
         "prepublishOnly": "npm run test",
         "test": "jest",
         "release": "micro-app release",
-        "publish:alpha": "npm publish --tag alpha",
-        "publish:next": "npm publish --tag next"
+        "release:alpha": "npm run release -- --preRelease=alpha",
+        "release:next": "npm run release -- --preRelease=next"
     },
     "files": [
         "src"
