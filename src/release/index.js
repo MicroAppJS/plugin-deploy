@@ -45,6 +45,7 @@ Examples:
 
         delete args.c;
         args.config = releaseConfig;
+        args.increment = args._[0] || args.increment;
 
         logger.info('[Release]', 'config:', args.config);
 
