@@ -50,6 +50,11 @@ Examples:
 
         let chain = Promise.resolve();
 
+        if (process.env.MICRO_APP_TEST) {
+            api.logger.debug('MICRO_APP_TEST --> Exit!!!');
+            return chain;
+        }
+
         chain = chain.then(() => api.applyPluginHooks('beforeCommandRelease', { args }));
 
         chain = chain.then(() => {
