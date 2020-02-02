@@ -14,7 +14,7 @@ module.exports = {
     },
     github: {
         release: true,
-        releaseName: 'Deploy %s Released!',
+        releaseName: '%s Released!',
         draft: true,
     },
     plugins: {
