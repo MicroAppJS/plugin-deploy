@@ -47,7 +47,7 @@ Examples:
         args.config = releaseConfig;
         args.increment = args._[0] || args.increment;
 
-        logger.info('[Release]', 'config:', args.config);
+        if (args.config) { logger.info('[Release]', 'config:', args.config); }
 
         let chain = Promise.resolve();
 
