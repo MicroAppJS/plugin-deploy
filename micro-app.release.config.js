@@ -2,15 +2,15 @@
 
 module.exports = {
     hooks: {
-        'before:bump': [
+        'before:init': [
             'npm test',
         ],
     },
     git: {
-        requireUpstream: false,
+        // requireUpstream: false,
         commitMessage: 'release: v${version}',
         tagName: 'v${version}',
-        push: false,
+        // push: false,
     },
     github: {
         release: true,
@@ -20,6 +20,7 @@ module.exports = {
     plugins: {
         '@release-it/conventional-changelog': {
             preset: 'angular',
+            infile: 'CHANGELOG.md',
         },
     },
 };
