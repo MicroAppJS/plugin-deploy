@@ -8,7 +8,7 @@ module.exports = {
         ],
     },
     git: {
-        commitMessage: 'chore: release %s',
+        commitMessage: 'chore: release v%s',
         tagName: 'v%s',
     },
     npm: {
@@ -16,7 +16,7 @@ module.exports = {
     },
     github: {
         release: true,
-        releaseName: '%s Released!',
+        releaseName: 'v%s Released!',
     },
     plugins: {
         '@release-it/conventional-changelog': {
