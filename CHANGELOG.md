@@ -1,3 +1,5 @@
+## [0.0.3](https://github.com/MicroAppJS/plugin-deploy/compare/v0.1.0...v0.0.3) (2020-02-09)
+
 # 0.1.0 (2020-02-09)
 
 
