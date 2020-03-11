@@ -10,8 +10,8 @@ module.exports = {
     git: {
         commitMessage: 'chore: release v%s',
         tagName: 'v%s',
-        requireUpstream: false,
-        push: false,
+        // requireUpstream: false,
+        // push: false,
     },
     npm: {
         publish: true,

@@ -42,6 +42,9 @@ Examples:
         if (releaseConfig && !_.isString(releaseConfig)) {
             releaseConfig = releaseConfig[Symbol.for('filepath')];
         }
+        if (!releaseConfig) { // 加载默认配置
+            releaseConfig = require.resolve('./config.js');
+        }
 
         delete args.c;
         args.config = releaseConfig;
