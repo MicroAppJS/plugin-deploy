@@ -1,3 +1,10 @@
+## [0.0.6](https://github.com/MicroAppJS/plugin-deploy/compare/v0.0.5...v0.0.6) (2020-03-16)
+
+
+### Features
+
+* update default config ([2f99f45](https://github.com/MicroAppJS/plugin-deploy/commit/2f99f4548cd5a6da08b41716cd613696cbe09498))
+
 ## 0.0.5 (2020-03-11)
 
 
