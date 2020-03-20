@@ -8,7 +8,7 @@ module.exports = {
         ],
     },
     git: {
-        commitMessage: 'chore: release v${version}',
+        commitMessage: 'bookmark: release v${version}',
         tagName: 'v${version}',
         // requireUpstream: false,
         // push: false,
@@ -18,7 +18,7 @@ module.exports = {
     },
     github: {
         release: true,
-        releaseName: 'v${version} Released!',
+        releaseName: ':rocket: v${version} Released!',
     },
     plugins: {
         '@release-it/conventional-changelog': {
