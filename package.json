@@ -1,6 +1,6 @@
 {
     "name": "@micro-app/plugin-deploy",
-    "version": "0.0.6",
+    "version": "0.0.7",
     "description": "[Plugin] auto deploy plugin.",
     "main": "src/index.js",
     "scripts": {

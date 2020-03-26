@@ -1,3 +1,10 @@
+## [0.0.7](https://github.com/MicroAppJS/plugin-deploy/compare/v0.0.6...v0.0.7) (2020-03-26)
+
+
+### Bug Fixes
+
+* 修复引用问题 ([f6f55c0](https://github.com/MicroAppJS/plugin-deploy/commit/f6f55c028cd38b50f48d0a74d19c7e6eca0b6c51))
+
 ## [0.0.6](https://github.com/MicroAppJS/plugin-deploy/compare/v0.0.5...v0.0.6) (2020-03-16)
 
 
