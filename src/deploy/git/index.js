@@ -80,7 +80,7 @@ function getGitMessage(api, { deployConfig, commitHash }) {
 
 async function runDeploy(api, { args, deployConfig, deployDir, gitURL, gitBranch, commitHash, gitUser, gitMessage, currBranch }) {
     const logger = api.logger;
-    const microAppConfig = api.self;
+    const microAppConfig = api.selfConfig;
     const MICRO_APP_CONFIG_NAME = microAppConfig.packageName;
 
     logger.logo(`Deploy: ${chalk.blueBright(gitURL)}`);
