@@ -3,10 +3,13 @@
     "version": "0.0.7",
     "description": "[Plugin] auto deploy plugin.",
     "main": "src/index.js",
+    "publishConfig": {
+        "access": "public"
+    },
     "scripts": {
         "prepublishOnly": "npm run test",
         "test": "jest",
-        "release": "micro-app release",
+        "release": "micro-app release --npm.skipChecks",
         "release:alpha": "npm run release -- --preRelease=alpha",
         "release:next": "npm run release -- --preRelease=next"
     },
