@@ -1,12 +1,13 @@
 'use strict';
 
-const { logger, execa } = require('@micro-app/shared-utils');
+const { logger, execa, shell } = require('@micro-app/shared-utils');
 
 const TIMEOUT = 1000 * 60 * 3;
 
 module.exports = {
     execGit,
     execGitSync,
+    getCommitHash,
     getCurrBranch,
     getGitBranch,
     getGitUser,
@@ -24,16 +25,22 @@ function execGit(args, options = {}) {
 }
 
 function execGitSync(args, options = {}) {
-    try {
-        const { stdout, exitCode } = execa.sync('git', args, Object.assign({ stdio: 'ignore', timeout: TIMEOUT }, options));
-        return exitCode === 0 ? (stdout || '').trim() : '';
-    } catch (error) {
-        logger.warn('[execGitSync]', error.message);
-        return '';
-    }
+    const cmd = [ 'git' ].concat(args).join(' ');
+    const { stdout, code, stderr } = shell.exec(cmd, Object.assign({ stdio: 'ignore', timeout: TIMEOUT, silent: true }, options));
+    if (code === 0) { return (stdout || '').trim(); }
+    logger.warn('[execGitSync]', cmd, stderr || stdout);
+    return '';
 }
 
-function getCurrBranch() {
+function getCommitHash() {
+    const commitHash = execGitSync([ 'rev-parse', '--verify', 'HEAD' ]);
+    return commitHash;
+}
+
+function getCurrBranch(deployConfig) {
+    if (deployConfig && deployConfig.baseBranch) {
+        return deployConfig.baseBranch;
+    }
     const currBranch = execGitSync([ 'rev-parse', '--abbrev-ref', 'HEAD' ]);
     return currBranch;
 }
@@ -53,7 +60,7 @@ function getGitBranch(deployConfig) {
 }
 
 function getGitUser(deployConfig) {
-    let userName = deployConfig.userName;
+    let userName = deployConfig.userName || process.env.GITHUB_ACTOR;
     if (!userName) {
         userName = execGitSync([ 'config', 'user.name' ]);
     }

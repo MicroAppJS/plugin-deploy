@@ -15,5 +15,9 @@ module.exports = function registerMethods(api, opts = {}) {
         description: '发布消息二次编辑事件',
     });
 
-    // TODO others type
+    // others type
+    api.registerMethod('addCommandDeployType', {
+        type: api.API_TYPE.ADD,
+        description: '添加其它类型的发布事件',
+    });
 };

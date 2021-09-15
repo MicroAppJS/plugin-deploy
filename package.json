@@ -1,11 +1,20 @@
 {
     "name": "@micro-app/plugin-deploy",
-    "version": "0.0.1",
+    "version": "0.0.8",
     "description": "[Plugin] auto deploy plugin.",
     "main": "src/index.js",
+    "publishConfig": {
+        "access": "public"
+    },
     "scripts": {
         "prepublishOnly": "npm run test",
-        "test": "jest"
+        "test": "jest",
+        "deploy": "micro-app deploy",
+        "release": "micro-app release",
+        "release:alpha": "npm run release -- --preRelease=alpha",
+        "release:next": "npm run release -- --preRelease=next",
+        "release:minor": "npm run release -- minor",
+        "release:patch": "npm run release -- patch"
     },
     "files": [
         "src"
@@ -31,17 +40,17 @@
     },
     "license": "MIT",
     "peerDependencies": {
-        "@micro-app/cli": ">=0.3.0"
+        "@micro-app/cli": ">=0.4.0"
     },
     "devDependencies": {
-        "@micro-app/cli": "^0.3.0-alpha.3",
-        "@types/jest": "^24.0.25",
-        "babel-eslint": "^10.0.3",
-        "eslint": "^5.16.0",
-        "eslint-config-2o3t": "^1.1.17",
-        "jest": "^24.9.0"
+        "@micro-app/cli": "^0.4.2",
+        "@micro-app/shared-utils": "^0.1.25",
+        "@types/jest": "^26.0.24",
+        "eslint-config-2o3t": "^2.0.2",
+        "jest": "^26.6.3"
     },
     "dependencies": {
-        "@micro-app/shared-utils": "^0.1.11"
+        "@release-it/conventional-changelog": "^2.0.1",
+        "release-it": "^14.11.5"
     }
 }

@@ -2,20 +2,17 @@
 
 /* global expect */
 
-const MicroApp = require('@micro-app/core');
-const Service = MicroApp.Service;
-const path = require('path');
 
 describe('Plugin DeployCommand', () => {
 
-    it('DeployCommand', () => {
-        const service = new Service();
-        service.registerPlugin({
-            id: 'test:DeployCommand',
-            link: path.join(__dirname, './index.js'),
-        });
+    it('release', async () => {
+        const { service } = require('@micro-app/cli');
+        await service.run('help', { _: [ 'release' ] });
+    });
 
-        service.run('help', { _: [] });
+    it('deploy', async () => {
+        const { service } = require('@micro-app/cli');
+        await service.run('help', { _: [ 'deploy' ] });
     });
 
 });

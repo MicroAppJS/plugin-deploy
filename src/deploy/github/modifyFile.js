@@ -8,7 +8,7 @@ module.exports = modifyFile;
 // TODO 需要匹配新版本
 function modifyFile(api, { args, deployConfig, deployDir, gitURL, gitBranch, commitHash, gitUser, gitMessage }) {
     const logger = api.logger;
-    const microAppConfig = api.self;
+    const microAppConfig = api.selfConfig;
 
     const pkgPath = path.resolve(deployDir, 'package.json');
     logger.info('[Deploy]', `modify file "${pkgPath}"`);

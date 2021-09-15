@@ -2,14 +2,20 @@
 
 const path = require('path');
 const { fs, _, chalk, Env } = require('@micro-app/shared-utils');
-const CONSTANTS = require('../../constants');
-const { execGit, execGitSync, getCurrBranch, getGitBranch, getGitUser } = require('./utils');
+const CONSTANTS = require('../constants');
+const { execGit, execGitSync, getCurrBranch, getGitBranch, getGitUser, getCommitHash } = require('./utils');
 
 function createCNAMEFile({ deployConfig, deployDir }) {
     const cname = deployConfig.cname;
-    if (!_.isEmpty(cname) && _.isString(cname)) {
+    if (!_.isEmpty(cname)) {
+        const cnames = [];
+        if (_.isString(cname)) {
+            cnames.push(cname);
+        } else if (_.isArray(cname)) {
+            cnames.push(...cname);
+        }
         const filepath = path.resolve(deployDir, 'CNAME');
-        fs.writeFileSync(filepath, cname, 'utf8');
+        fs.writeFileSync(filepath, cnames.join('\n'), 'utf8');
     }
 }
 
@@ -32,8 +38,7 @@ async function clone(api, { deployDir, gitURL, gitBranch }) {
     return await execGit([ 'clone', gitURL, '-b', gitBranch, deployDir ], { cwd: deployDir });
 }
 
-function gitPush(api, { args, deployConfig, deployDir, gitURL, gitBranch, commitHash, gitUser, gitMessage, name }) {
-    const currBranch = getCurrBranch();
+function gitPush(api, { args, deployConfig, deployDir, gitURL, gitBranch, commitHash, gitUser, gitMessage, name, currBranch }) {
     // commit + push
     const { message } = api.applyPluginHooks('modifyCommandDeployMessage', {
         args, config: deployConfig,
@@ -62,16 +67,6 @@ function gitPush(api, { args, deployConfig, deployDir, gitURL, gitBranch, commit
     return chain;
 }
 
-function getCommitHash(api, { isHooks, gitBranch }) {
-    let commitHash = '';
-    if (isHooks) {
-        commitHash = execGitSync([ 'rev-parse', '--verify', 'HEAD' ]);
-    } else {
-        commitHash = execGitSync([ 'rev-parse', `origin/${gitBranch}` ]);
-    }
-    return commitHash;
-}
-
 function getGitMessage(api, { deployConfig, commitHash }) {
     let gitMessage = deployConfig.message && ` | ${deployConfig.message}` || '';
     if (!gitMessage) {
@@ -83,9 +78,9 @@ function getGitMessage(api, { deployConfig, commitHash }) {
     return gitMessage;
 }
 
-async function runDeploy(api, { args, deployConfig, deployDir, gitURL, gitBranch, commitHash, gitUser, gitMessage }) {
+async function runDeploy(api, { args, deployConfig, deployDir, gitURL, gitBranch, commitHash, gitUser, gitMessage, currBranch }) {
     const logger = api.logger;
-    const microAppConfig = api.self;
+    const microAppConfig = api.selfConfig;
     const MICRO_APP_CONFIG_NAME = microAppConfig.packageName;
 
     logger.logo(`Deploy: ${chalk.blueBright(gitURL)}`);
@@ -99,7 +94,7 @@ async function runDeploy(api, { args, deployConfig, deployDir, gitURL, gitBranch
     try {
         await setup(api, { deployDir, gitUser });
 
-        const hasDist = deployConfig.dist;
+        const hasDist = deployConfig.dest;
         let bModify = false;
         if (!hasDist) { // 需要 clone, 且自动修改 package.json
             spinner.text = 'Cloning...';
@@ -107,9 +102,9 @@ async function runDeploy(api, { args, deployConfig, deployDir, gitURL, gitBranch
             spinner.text = 'Modify files...';
             const modifyFile = require('./modifyFile');
             bModify = modifyFile(api, { args, deployConfig, deployDir, gitURL, gitBranch, commitHash, gitUser, gitMessage });
-        } else { // copy dist to deployDir
+        } else { // copy dest to deployDir
             const opts = {};
-            spinner.text = 'Copying files from dist folder...';
+            spinner.text = 'Copying files from dest folder...';
             await fs.copy(hasDist, deployDir, opts);
             bModify = true;
         }
@@ -119,7 +114,8 @@ async function runDeploy(api, { args, deployConfig, deployDir, gitURL, gitBranch
 
         if (bModify) {
             spinner.text = 'Push files...';
-            await gitPush(api, { args, deployConfig, deployDir, gitURL, gitBranch, commitHash, gitUser, gitMessage, name: MICRO_APP_CONFIG_NAME });
+            const params = { args, deployConfig, deployDir, gitURL, gitBranch, commitHash, gitUser, gitMessage, name: MICRO_APP_CONFIG_NAME, currBranch };
+            await gitPush(api, params);
             spinner.succeed(chalk.green('Success!'));
         } else {
             spinner.succeed(chalk.yellow('NOT MODIFIED!'));
@@ -131,7 +127,8 @@ async function runDeploy(api, { args, deployConfig, deployDir, gitURL, gitBranch
     return false;
 }
 
-module.exports = async function deployCommit(api, args, deployConfigs) {
+module.exports = async function deployCommit(api, args, deployConfig) {
+
     const logger = api.logger;
     const root = api.root;
 
@@ -139,49 +136,47 @@ module.exports = async function deployCommit(api, args, deployConfigs) {
         logger.throw('Sorry, this script requires git');
     }
 
-    const isHooks = args.hooks;
+    // TODO 迁移到外部，且不中断（分成不同组类型，批量部署）
+    const gitURL = deployConfig.url || '';
+    if (_.isEmpty(gitURL)) {
+        logger.warn('repository is required!');
+        return;
+    }
+    const gitBranch = getGitBranch(deployConfig);
+    if (_.isEmpty(gitBranch)) {
+        logger.warn('branch is required!');
+        return;
+    }
+    const gitUser = getGitUser(deployConfig);
 
-    return Promise.all(deployConfigs.map(async (deployConfig, index) => {
+    const currBranch = getCurrBranch(deployConfig);
 
-        const gitURL = deployConfig.url || '';
-        if (_.isEmpty(gitURL)) {
-            logger.warn('repository is required!');
-            return;
-        }
-        const gitBranch = getGitBranch(deployConfig);
-        if (_.isEmpty(gitBranch)) {
-            logger.warn('branch is required!');
-            return;
-        }
-        const gitUser = getGitUser(deployConfig);
+    const commitHash = getCommitHash();
+    if (_.isEmpty(commitHash)) {
+        logger.warn('Not Found commit Hash!');
+        return;
+    }
 
-        const commitHash = getCommitHash(api, { isHooks, gitBranch });
-        if (_.isEmpty(commitHash)) {
-            logger.warn('Not Found commit Hash!');
-            return;
-        }
+    const gitMessage = getGitMessage(api, { deployConfig, commitHash });
 
-        const gitMessage = getGitMessage(api, { deployConfig, commitHash });
+    const gitRoot = path.resolve(root, CONSTANTS.GIT_NAME);
+    if (!fs.existsSync(gitRoot)) {
+        fs.mkdirpSync(gitRoot);
+    }
+    const deployDir = path.resolve(gitRoot, CONSTANTS.GIT_SCOPE_NAME);
 
-        const gitRoot = path.resolve(root, CONSTANTS.GIT_NAME);
-        if (!fs.existsSync(gitRoot)) {
-            fs.mkdirpSync(gitRoot);
-        }
-        const deployDir = path.resolve(gitRoot, CONSTANTS.GIT_SCOPE_NAME);
+    const params = { args, deployConfig, deployDir, gitURL, gitBranch, commitHash, gitUser, gitMessage, currBranch };
+    const bSuccessful = await runDeploy(api, params);
 
-        const params = { args, deployConfig, deployDir, gitURL, gitBranch, commitHash, gitUser, gitMessage };
-        const bSuccessful = await runDeploy(api, params);
+    // 清空
+    if (fs.existsSync(deployDir)) {
+        fs.removeSync(deployDir);
+    }
 
-        // 清空
-        if (fs.existsSync(deployDir)) {
-            fs.removeSync(deployDir);
-        }
+    if (!bSuccessful) {
+        logger.error('Fail! Check your config, please!');
+        process.exit(1);
+    }
 
-        if (!bSuccessful) {
-            logger.error(`Fail${index && ` [${index}]`}! Check your config, please!`);
-            process.exit(1);
-        }
-
-        return params;
-    }));
+    return params;
 };
