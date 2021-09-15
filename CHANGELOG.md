@@ -1,3 +1,10 @@
+## [0.0.9](https://github.com/MicroAppJS/plugin-deploy/compare/v0.0.8...v0.0.9) (2021-09-15)
+
+
+### Features
+
+* 优化部分配置信息逻辑，升级部分依赖 ([f812ed2](https://github.com/MicroAppJS/plugin-deploy/commit/f812ed2df09ab50ed0ffbf3ca866170d07ae0487))
+
 ## [0.0.8](https://github.com/MicroAppJS/plugin-deploy/compare/v0.0.7...v0.0.8) (2021-03-18)
 
 ## [0.0.7](https://github.com/MicroAppJS/plugin-deploy/compare/v0.0.6...v0.0.7) (2020-03-26)
