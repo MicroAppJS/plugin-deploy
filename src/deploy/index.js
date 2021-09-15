@@ -12,11 +12,11 @@ module.exports = function(api, opts = {}) {
         usage: 'micro-app deploy [options]',
         options: {
             '-': 'deploy last commit',
-            '--type': '部署方式类型. (default: git)',
+            '--type': '部署方式类型. (default: github)',
             '--message': 'git commit message.',
             '--name': 'git commit user name.',
             '--email': 'git commit user email.',
-            '--config <config>': '指定配置文件路径, 相对于根路径. 默认为根目录下的: "micro-app.deploy.config.js"',
+            '--config <config>': '指定配置文件路径, 相对于根路径. 默认为: "config/deploy.js"',
         },
         details: `
 Examples:
@@ -28,7 +28,7 @@ Examples:
 Config:
     {
         disabled: false, ${chalk.gray('// 是否禁用该功能')}
-        repository: '', ${chalk.gray('// git 地址')}
+        repository: '', ${chalk.gray('// github 地址')}
         ${chalk.gray('branch: \'\',')}
         branch: {  ${chalk.gray('// git branch')}
             name: '',
@@ -39,7 +39,7 @@ Config:
             name: '',
             email: '',
         },
-        dest: '', ${chalk.gray('// git dest')}
+        dest: '', ${chalk.gray('// git dest path')}
         cname: '', ${chalk.gray('// 如果是发布到自定义域名, default: false')}
     }
         `.trim(),
@@ -47,43 +47,47 @@ Config:
         const logger = api.logger;
 
         const parseConfig = require('./parseConfig');
-        const deployConfig = parseConfig(api, args, opts);
+        let deployConfigs = parseConfig(api, args, opts);
 
-        if (_.isEmpty(deployConfig)) {
+        if (_.isEmpty(deployConfigs) || deployConfigs.length <= 0) {
             logger.error('[Deploy]', '无法加载到 Deploy 配置信息...');
             return;
         }
 
-        if (deployConfig && deployConfig.disabled) {
-            logger.info('[Deploy]', '已禁用命令行 Deploy...');
-            return;
-        }
+        deployConfigs = deployConfigs.filter((deployConfig, index) => {
+            if (!deployConfig || deployConfig.disabled) {
+                logger.info('[Deploy]', `"索引:${index}"`, '已禁用...');
+                return false;
+            }
+            return true;
+        });
 
-        const deployCmds = [
+        const deployCmds = [ // 部署支持的类型
             {
-                type: 'git',
-                run: require('./git'),
+                type: 'github',
+                run: require('./github'),
             },
         ].concat(api.applyPluginHooks('addCommandDeployType', []) || []);
 
-        // default: git
-        args.type = args.type || 'git';
-
         let chain = Promise.resolve();
 
-        chain = chain.then(() => api.applyPluginHooks('beforeCommandDeploy', { args, config: deployConfig }));
+        chain = chain.then(() => api.applyPluginHooks('beforeCommandDeploy', { args, config: deployConfigs }));
 
-        const type = args.type;
-        const allCmds = deployCmds.filter(item => item.type === type);
-        if (allCmds.length > 0) {
-            allCmds.forEach(item => {
-                const run = item.run;
-                chain = chain.then(() => run(api, args, deployConfig));
-            });
-        } else {
-            chain = chain.then(() => logger.warn('[Deploy]', `Not Found type: ${type}!`));
-        }
-        chain = chain.then(() => api.applyPluginHooks('afterCommandDeploy', { args, config: deployConfig }));
+        deployConfigs.forEach(deployConfig => {
+            // default: github
+            const type = args.type || deployConfig.type || 'github';
+            const allCmds = deployCmds.filter(item => item.type === type);
+            if (allCmds.length > 0) {
+                allCmds.forEach(item => {
+                    const run = item.run;
+                    chain = chain.then(() => run(api, args, deployConfig));
+                });
+            } else {
+                chain = chain.then(() => logger.warn('[Deploy]', `Not Found type: ${type}!`));
+            }
+        });
+
+        chain = chain.then(() => api.applyPluginHooks('afterCommandDeploy', { args, config: deployConfigs }));
 
         return chain.catch(e => {
             logger.throw('[Deploy]', e);

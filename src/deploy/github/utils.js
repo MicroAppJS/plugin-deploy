@@ -60,7 +60,7 @@ function getGitBranch(deployConfig) {
 }
 
 function getGitUser(deployConfig) {
-    let userName = deployConfig.userName;
+    let userName = deployConfig.userName || process.env.GITHUB_ACTOR;
     if (!userName) {
         userName = execGitSync([ 'config', 'user.name' ]);
     }

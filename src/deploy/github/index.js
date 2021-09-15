@@ -114,7 +114,8 @@ async function runDeploy(api, { args, deployConfig, deployDir, gitURL, gitBranch
 
         if (bModify) {
             spinner.text = 'Push files...';
-            await gitPush(api, { args, deployConfig, deployDir, gitURL, gitBranch, commitHash, gitUser, gitMessage, name: MICRO_APP_CONFIG_NAME, currBranch });
+            const params = { args, deployConfig, deployDir, gitURL, gitBranch, commitHash, gitUser, gitMessage, name: MICRO_APP_CONFIG_NAME, currBranch };
+            await gitPush(api, params);
             spinner.succeed(chalk.green('Success!'));
         } else {
             spinner.succeed(chalk.yellow('NOT MODIFIED!'));
@@ -126,7 +127,8 @@ async function runDeploy(api, { args, deployConfig, deployDir, gitURL, gitBranch
     return false;
 }
 
-module.exports = async function deployCommit(api, args, deployConfigs) {
+module.exports = async function deployCommit(api, args, deployConfig) {
+
     const logger = api.logger;
     const root = api.root;
 
@@ -135,49 +137,46 @@ module.exports = async function deployCommit(api, args, deployConfigs) {
     }
 
     // TODO 迁移到外部，且不中断（分成不同组类型，批量部署）
-    return Promise.all(deployConfigs.map(async (deployConfig, index) => {
+    const gitURL = deployConfig.url || '';
+    if (_.isEmpty(gitURL)) {
+        logger.warn('repository is required!');
+        return;
+    }
+    const gitBranch = getGitBranch(deployConfig);
+    if (_.isEmpty(gitBranch)) {
+        logger.warn('branch is required!');
+        return;
+    }
+    const gitUser = getGitUser(deployConfig);
 
-        const gitURL = deployConfig.url || '';
-        if (_.isEmpty(gitURL)) {
-            logger.warn('repository is required!');
-            return;
-        }
-        const gitBranch = getGitBranch(deployConfig);
-        if (_.isEmpty(gitBranch)) {
-            logger.warn('branch is required!');
-            return;
-        }
-        const gitUser = getGitUser(deployConfig);
+    const currBranch = getCurrBranch(deployConfig);
 
-        const currBranch = getCurrBranch(deployConfig);
+    const commitHash = getCommitHash();
+    if (_.isEmpty(commitHash)) {
+        logger.warn('Not Found commit Hash!');
+        return;
+    }
 
-        const commitHash = getCommitHash();
-        if (_.isEmpty(commitHash)) {
-            logger.warn('Not Found commit Hash!');
-            return;
-        }
+    const gitMessage = getGitMessage(api, { deployConfig, commitHash });
 
-        const gitMessage = getGitMessage(api, { deployConfig, commitHash });
+    const gitRoot = path.resolve(root, CONSTANTS.GIT_NAME);
+    if (!fs.existsSync(gitRoot)) {
+        fs.mkdirpSync(gitRoot);
+    }
+    const deployDir = path.resolve(gitRoot, CONSTANTS.GIT_SCOPE_NAME);
 
-        const gitRoot = path.resolve(root, CONSTANTS.GIT_NAME);
-        if (!fs.existsSync(gitRoot)) {
-            fs.mkdirpSync(gitRoot);
-        }
-        const deployDir = path.resolve(gitRoot, CONSTANTS.GIT_SCOPE_NAME);
+    const params = { args, deployConfig, deployDir, gitURL, gitBranch, commitHash, gitUser, gitMessage, currBranch };
+    const bSuccessful = await runDeploy(api, params);
 
-        const params = { args, deployConfig, deployDir, gitURL, gitBranch, commitHash, gitUser, gitMessage, currBranch };
-        const bSuccessful = await runDeploy(api, params);
+    // 清空
+    if (fs.existsSync(deployDir)) {
+        fs.removeSync(deployDir);
+    }
 
-        // 清空
-        if (fs.existsSync(deployDir)) {
-            fs.removeSync(deployDir);
-        }
+    if (!bSuccessful) {
+        logger.error('Fail! Check your config, please!');
+        process.exit(1);
+    }
 
-        if (!bSuccessful) {
-            logger.error(`Fail${index && ` [${index}]`}! Check your config, please!`);
-            process.exit(1);
-        }
-
-        return params;
-    }));
+    return params;
 };

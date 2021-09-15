@@ -38,11 +38,10 @@ function parseConfig(deployConfig, api, args) {
         return null;
     }
 
-    const type = deployConfig.type || 'git';
     const disabled = deployConfig.disabled || deployConfig.disable || false;
     const message = args.m || args.msg || args.message || deployConfig.message || '';
 
-    const userName = args.name || args.userName || _.get(deployConfig, 'user.name') || process.env.GITHUB_ACTOR || '';
+    const userName = args.name || args.userName || _.get(deployConfig, 'user.name') || '';
     const userEmail = args.email || args.userEmail || _.get(deployConfig, 'user.email') || '';
 
     const cname = deployConfig.cname || deployConfig.CNAME || false;
@@ -52,7 +51,7 @@ function parseConfig(deployConfig, api, args) {
     const dist = dest || args.dist || deployConfig.dist || false;
 
     const _otherConfig = {
-        type, disabled,
+        disabled,
         message,
         userName,
         userEmail,
@@ -71,7 +70,7 @@ function parseConfig(deployConfig, api, args) {
     }
     data.branch = branch;
     data.extends = _.get(deployConfig, 'branch.extends') || false;
-    return Object.assign(data, _otherConfig);
+    return Object.assign({}, deployConfig, _otherConfig, data);
 }
 
 module.exports = function(api, args, opts) {
@@ -92,7 +91,7 @@ module.exports = function(api, args, opts) {
         const result = deployConfig.map(item => {
             const _config = Object.assign({}, opts, item || {});
             if (_.isEmpty(_config)) return null;
-            return parseConfig(item, api, args);
+            return parseConfig(_config, api, args);
         }).filter(item => !!item);
         if (_.isEmpty(result)) return null;
         return result;

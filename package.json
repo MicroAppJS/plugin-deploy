@@ -9,9 +9,12 @@
     "scripts": {
         "prepublishOnly": "npm run test",
         "test": "jest",
-        "release": "micro-app release --npm.skipChecks",
+        "deploy": "micro-app deploy",
+        "release": "micro-app release",
         "release:alpha": "npm run release -- --preRelease=alpha",
-        "release:next": "npm run release -- --preRelease=next"
+        "release:next": "npm run release -- --preRelease=next",
+        "release:minor": "npm run release -- minor",
+        "release:patch": "npm run release -- patch"
     },
     "files": [
         "src"
@@ -40,14 +43,14 @@
         "@micro-app/cli": ">=0.4.0"
     },
     "devDependencies": {
-        "@micro-app/cli": "0.4.0",
-        "@micro-app/shared-utils": "0.1.21",
-        "@types/jest": "^26.0.21",
-        "eslint-config-2o3t": "^2.0.1",
+        "@micro-app/cli": "^0.4.2",
+        "@micro-app/shared-utils": "^0.1.25",
+        "@types/jest": "^26.0.24",
+        "eslint-config-2o3t": "^2.0.2",
         "jest": "^26.6.3"
     },
     "dependencies": {
         "@release-it/conventional-changelog": "^2.0.1",
-        "release-it": "^14.4.1"
+        "release-it": "^14.11.5"
     }
 }
